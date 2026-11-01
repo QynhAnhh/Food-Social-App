@@ -1,0 +1,32 @@
+[
+  {
+    "id": 1,
+    "name": "Eat Clean",
+    "slug": "eat-clean",
+    "description": "Chế độ ăn tập trung vào thực phẩm tươi, tự nhiên, ít qua chế biến công nghiệp."
+  },
+  {
+    "id": 2,
+    "name": "Keto (Ketogenic)",
+    "slug": "keto",
+    "description": "Chế độ ăn nhiều chất béo tốt, lượng đạm vừa phải và rất ít carbohydrate."
+  },
+  {
+    "id": 3,
+    "name": "Ăn chay (Vegetarian)",
+    "slug": "vegetarian",
+    "description": "Chế độ ăn sử dụng thực vật, không sử dụng thịt động vật."
+  },
+  {
+    "id": 4,
+    "name": "Low-Carb",
+    "slug": "low-carb",
+    "description": "Hạn chế hàm lượng carbohydrate từ ngũ cốc, các loại củ nhiều tinh bột và đồ ngọt."
+  },
+  {
+    "id": 5,
+    "name": "Thuần chay (Vegan)",
+    "slug": "vegan",
+    "description": "Hoàn toàn loại bỏ mọi thực phẩm và chế phẩm từ động vật (trứng, sữa, mật ong)."
+  }
+]

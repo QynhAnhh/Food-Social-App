@@ -191,7 +191,19 @@ Food-Social-App/
 
 ---
 
-## 🤝 7. Quy chuẩn đóng góp mã nguồn (Contributing)
+## 📚 7. Tài liệu kỹ thuật chi tiết (Technical Documentation)
+
+Để phục vụ phát triển song song giữa Frontend (Android) và Backend (Node.js) mà không phát sinh xung đột, đội ngũ kỹ thuật tuân thủ bộ tài liệu đặc tả chi tiết:
+
+* 🚨 **[Quy chuẩn xử lý lỗi & Bảng mã lỗi toàn hệ thống](docs/conventions/error-handling-codes.md)**: Danh mục các mã `errorCode`, cấu trúc JSON phản hồi lỗi thống nhất và hướng dẫn bắt lỗi trên Android/Node.js.
+* 🔐 **[Kiến trúc Xác thực & Phân quyền](docs/security/auth-and-permissions.md)**: Luồng Google Sign-In, Firebase ID Token, cơ chế refresh token và phân quyền vai trò `USER` / `ADMIN`.
+* 🔄 **[Đặc tả luồng nghiệp vụ: Auth & Profile](docs/business-flows/auth-and-profile-flow.md)**: Sơ đồ tuần tự (Sequence Diagram) luồng đăng nhập, bắt buộc tạo nickname và cấu hình dị ứng.
+* 📜 **[Hợp đồng API Giai đoạn 1](docs/api/auth-user-api.md)**: Đặc tả chi tiết Request/Response cho các endpoint Đăng nhập, Nickname, Profile và Danh mục.
+* 📦 **[Dữ liệu mẫu dùng chung (Mock Data)](docs/mock-data/)**: File JSON chuẩn về [Danh mục](docs/mock-data/categories.json), [Chế độ ăn](docs/mock-data/dietary-regimes.json) và [Từ điển nguyên liệu](docs/mock-data/ingredients.json) dùng để seed database và mock trên Android.
+
+---
+
+## 🤝 8. Quy chuẩn đóng góp mã nguồn (Contributing)
 
 Mọi thành viên tham gia phát triển dự án bắt buộc phải đọc và tuân thủ các quy tắc về đặt tên nhánh, quy chuẩn commit message và quy trình mở Pull Request tại:
 
@@ -199,7 +211,7 @@ Mọi thành viên tham gia phát triển dự án bắt buộc phải đọc v�
 
 ---
 
-## 📄 8. Bản quyền (License)
+## 📄 9. Bản quyền (License)
 
 Dự án được phân phối dưới giấy phép **MIT License**. Chi tiết xem tại file [LICENSE](./LICENSE).
 

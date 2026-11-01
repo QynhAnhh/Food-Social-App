@@ -1,0 +1,17 @@
+[
+  {
+    "id": 1,
+    "name": "Bữa chính",
+    "slug": "bua-chinh"
+  },
+  {
+    "id": 2,
+    "name": "Món tráng miệng",
+    "slug": "mon-trang-mieng"
+  },
+  {
+    "id": 3,
+    "name": "Các loại bánh",
+    "slug": "cac-loai-banh"
+  }
+]

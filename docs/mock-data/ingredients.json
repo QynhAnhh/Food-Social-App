@@ -1,0 +1,177 @@
+[
+  {
+    "id": 1,
+    "name": "Thịt bò thăn",
+    "standardUnit": "gram",
+    "imageUrl": "https://storage.googleapis.com/food-social-app/ingredients/thit_bo.png",
+    "isAllergenCommon": false
+  },
+  {
+    "id": 2,
+    "name": "Ức gà",
+    "standardUnit": "gram",
+    "imageUrl": "https://storage.googleapis.com/food-social-app/ingredients/uc_ga.png",
+    "isAllergenCommon": false
+  },
+  {
+    "id": 3,
+    "name": "Thịt ba chỉ heo",
+    "standardUnit": "gram",
+    "imageUrl": "https://storage.googleapis.com/food-social-app/ingredients/thit_heo.png",
+    "isAllergenCommon": false
+  },
+  {
+    "id": 4,
+    "name": "Cá hồi phi lê",
+    "standardUnit": "gram",
+    "imageUrl": "https://storage.googleapis.com/food-social-app/ingredients/ca_hoi.png",
+    "isAllergenCommon": true
+  },
+  {
+    "id": 5,
+    "name": "Tôm sú",
+    "standardUnit": "gram",
+    "imageUrl": "https://storage.googleapis.com/food-social-app/ingredients/tom_su.png",
+    "isAllergenCommon": true
+  },
+  {
+    "id": 6,
+    "name": "Mực ống",
+    "standardUnit": "gram",
+    "imageUrl": "https://storage.googleapis.com/food-social-app/ingredients/muc_ong.png",
+    "isAllergenCommon": true
+  },
+  {
+    "id": 7,
+    "name": "Trứng gà",
+    "standardUnit": "quả",
+    "imageUrl": "https://storage.googleapis.com/food-social-app/ingredients/trung_ga.png",
+    "isAllergenCommon": true
+  },
+  {
+    "id": 8,
+    "name": "Sữa tươi không đường",
+    "standardUnit": "ml",
+    "imageUrl": "https://storage.googleapis.com/food-social-app/ingredients/sua_tuoi.png",
+    "isAllergenCommon": true
+  },
+  {
+    "id": 9,
+    "name": "Đậu phộng (Lạc)",
+    "standardUnit": "gram",
+    "imageUrl": "https://storage.googleapis.com/food-social-app/ingredients/dau_phong.png",
+    "isAllergenCommon": true
+  },
+  {
+    "id": 10,
+    "name": "Đậu hũ non",
+    "standardUnit": "gram",
+    "imageUrl": "https://storage.googleapis.com/food-social-app/ingredients/dau_hu.png",
+    "isAllergenCommon": true
+  },
+  {
+    "id": 11,
+    "name": "Bột mì đa dụng",
+    "standardUnit": "gram",
+    "imageUrl": "https://storage.googleapis.com/food-social-app/ingredients/bot_mi.png",
+    "isAllergenCommon": true
+  },
+  {
+    "id": 12,
+    "name": "Cà chua",
+    "standardUnit": "quả",
+    "imageUrl": "https://storage.googleapis.com/food-social-app/ingredients/ca_chua.png",
+    "isAllergenCommon": false
+  },
+  {
+    "id": 13,
+    "name": "Hành tây",
+    "standardUnit": "củ",
+    "imageUrl": "https://storage.googleapis.com/food-social-app/ingredients/hanh_tay.png",
+    "isAllergenCommon": false
+  },
+  {
+    "id": 14,
+    "name": "Tỏi",
+    "standardUnit": "tép",
+    "imageUrl": "https://storage.googleapis.com/food-social-app/ingredients/toi.png",
+    "isAllergenCommon": false
+  },
+  {
+    "id": 15,
+    "name": "Ớt chuông",
+    "standardUnit": "quả",
+    "imageUrl": "https://storage.googleapis.com/food-social-app/ingredients/ot_chuong.png",
+    "isAllergenCommon": false
+  },
+  {
+    "id": 16,
+    "name": "Bông cải xanh (Súp lơ)",
+    "standardUnit": "gram",
+    "imageUrl": "https://storage.googleapis.com/food-social-app/ingredients/bong_cai.png",
+    "isAllergenCommon": false
+  },
+  {
+    "id": 17,
+    "name": "Khoai tây",
+    "standardUnit": "củ",
+    "imageUrl": "https://storage.googleapis.com/food-social-app/ingredients/khoai_tay.png",
+    "isAllergenCommon": false
+  },
+  {
+    "id": 18,
+    "name": "Cà rốt",
+    "standardUnit": "củ",
+    "imageUrl": "https://storage.googleapis.com/food-social-app/ingredients/ca_rot.png",
+    "isAllergenCommon": false
+  },
+  {
+    "id": 19,
+    "name": "Hành lá",
+    "standardUnit": "gram",
+    "imageUrl": "https://storage.googleapis.com/food-social-app/ingredients/hanh_la.png",
+    "isAllergenCommon": false
+  },
+  {
+    "id": 20,
+    "name": "Dầu ăn thực vật",
+    "standardUnit": "ml",
+    "imageUrl": "https://storage.googleapis.com/food-social-app/ingredients/dau_an.png",
+    "isAllergenCommon": false
+  },
+  {
+    "id": 21,
+    "name": "Nước mắm truyền thống",
+    "standardUnit": "ml",
+    "imageUrl": "https://storage.googleapis.com/food-social-app/ingredients/nuoc_mam.png",
+    "isAllergenCommon": false
+  },
+  {
+    "id": 22,
+    "name": "Nước tương (Xì dầu)",
+    "standardUnit": "ml",
+    "imageUrl": "https://storage.googleapis.com/food-social-app/ingredients/nuoc_tuong.png",
+    "isAllergenCommon": true
+  },
+  {
+    "id": 23,
+    "name": "Đường trắng",
+    "standardUnit": "gram",
+    "imageUrl": "https://storage.googleapis.com/food-social-app/ingredients/duong.png",
+    "isAllergenCommon": false
+  },
+  {
+    "id": 24,
+    "name": "Muối tinh",
+    "standardUnit": "gram",
+    "imageUrl": "https://storage.googleapis.com/food-social-app/ingredients/muoi.png",
+    "isAllergenCommon": false
+  },
+  {
+    "id": 25,
+    "name": "Tiêu đen xay",
+    "standardUnit": "gram",
+    "imageUrl": "https://storage.googleapis.com/food-social-app/ingredients/tieu_den.png",
+    "isAllergenCommon": false
+  }
+]
