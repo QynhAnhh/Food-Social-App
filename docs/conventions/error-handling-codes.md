@@ -136,3 +136,4 @@ sealed class NetworkResult<out T> {
     object Loading : NetworkResult<Nothing>()
 }
 ```
+

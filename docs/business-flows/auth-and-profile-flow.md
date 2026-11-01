@@ -100,3 +100,4 @@ Người dùng có thể chủ động khai báo các nguyên liệu gây dị �
    - Xóa các bản ghi cũ trong `user_allergies` của người dùng này.
    - Thêm mới các bản ghi theo mảng ID vừa gửi.
 7. Từ thời điểm này, mọi truy vấn tìm kiếm công thức hoặc gợi ý tủ lạnh sẽ **tự động loại trừ** các công thức có chứa các `ingredient_id` này.
+

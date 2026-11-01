@@ -98,3 +98,4 @@ Hệ thống định nghĩa 2 vai trò cơ bản thông qua trường `role` tro
 | | `/api/v1/ingredients` | `GET` | 🟢 Public | Tìm kiếm nguyên liệu chuẩn từ từ điển |
 | | `/api/v1/categories` | `POST` / `PUT` | 🔴 Admin-only | Quản lý từ điển danh mục |
 | | `/api/v1/ingredients` | `POST` / `PUT` | 🔴 Admin-only | Thêm nguyên liệu chuẩn vào hệ thống |
+
