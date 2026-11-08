@@ -1,0 +1,150 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+// 1. Phân quyền người dùng (Enum)
+enum Role {
+  USER
+  ADMIN
+}
+
+// Enum trạng thái công thức
+enum RecipeStatus {
+  DRAFT
+  PUBLISHED
+  HIDDEN
+}
+
+// 2. Bảng users (Người dùng cốt lõi)
+model User {
+  id          String   @id @default(uuid()) @db.Uuid
+  firebaseUid String   @unique @map("firebase_uid") @db.VarChar(128)
+  email       String   @unique @db.VarChar(255)
+  nickname    String   @unique @db.VarChar(50)
+  fullName    String?  @map("full_name") @db.VarChar(100)
+  avatarUrl   String?  @map("avatar_url") @db.Text
+  bio         String?  @db.Text
+  role        Role     @default(USER)
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt   DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+
+  recipes     Recipe[]
+  fridgeItems UserFridgeItem[]
+
+  @@map("users")
+}
+
+// 3. Bảng dietary_regimes (Danh mục chế độ ăn kiêng)
+model DietaryRegime {
+  id          Int     @id @default(autoincrement())
+  name        String  @unique @db.VarChar(100)
+  slug        String  @unique @db.VarChar(100)
+  description String? @db.Text
+
+  @@map("dietary_regimes")
+}
+
+// 4. Bảng categories (Danh mục món ăn)
+model Category {
+  id      Int      @id @default(autoincrement())
+  name    String   @unique @db.VarChar(100)
+  slug    String   @unique @db.VarChar(100)
+  recipes Recipe[]
+
+  @@map("categories")
+}
+
+// 5. Bảng ingredients (Từ điển nguyên liệu chuẩn)
+model Ingredient {
+  id               Int     @id @default(autoincrement())
+  name             String  @unique @db.VarChar(150)
+  standardUnit     String  @map("standard_unit") @db.VarChar(30)
+  imageUrl         String? @map("image_url") @db.Text
+  isAllergenCommon Boolean @default(false) @map("is_allergen_common")
+
+  recipeIngredients RecipeIngredient[]
+  fridgeItems       UserFridgeItem[]
+
+  @@index([name])
+  @@index([isAllergenCommon])
+  @@map("ingredients")
+}
+
+// 6. Bảng recipes (Công thức nấu ăn)
+model Recipe {
+  id           String       @id @default(uuid()) @db.Uuid
+  authorId     String       @map("author_id") @db.Uuid
+  categoryId   Int          @map("category_id")
+  title        String       @db.VarChar(200)
+  description  String?      @db.Text
+  thumbnailUrl String       @map("thumbnail_url") @db.Text
+  cookingTime  Int          @map("cooking_time")
+  servings     Int          @default(1)
+  avgRating    Decimal      @default(0.00) @map("avg_rating") @db.Decimal(3, 2)
+  ratingCount  Int          @default(0) @map("rating_count")
+  status       RecipeStatus @default(PUBLISHED)
+  createdAt    DateTime     @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt    DateTime     @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+
+  author      User               @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  category    Category           @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  steps       RecipeStep[]
+  ingredients RecipeIngredient[]
+
+  @@index([authorId])
+  @@index([categoryId])
+  @@index([title])
+  @@map("recipes")
+}
+
+// 7. Bảng recipe_steps (Các bước thực hiện)
+model RecipeStep {
+  id          Int     @id @default(autoincrement())
+  recipeId    String  @map("recipe_id") @db.Uuid
+  stepNumber  Int     @map("step_number")
+  instruction String  @db.Text
+  imageUrl    String? @map("image_url") @db.Text
+
+  recipe Recipe @relation(fields: [recipeId], references: [id], onDelete: Cascade)
+
+  @@unique([recipeId, stepNumber])
+  @@index([recipeId])
+  @@map("recipe_steps")
+}
+
+// 8. Bảng recipe_ingredients (Nguyên liệu trong công thức)
+model RecipeIngredient {
+  recipeId     String  @map("recipe_id") @db.Uuid
+  ingredientId Int     @map("ingredient_id")
+  quantity     Decimal @db.Decimal(10, 2)
+  note         String? @db.VarChar(255)
+
+  recipe     Recipe     @relation(fields: [recipeId], references: [id], onDelete: Cascade)
+  ingredient Ingredient @relation(fields: [ingredientId], references: [id], onDelete: Restrict)
+
+  @@id([recipeId, ingredientId])
+  @@index([recipeId])
+  @@index([ingredientId])
+  @@map("recipe_ingredients")
+}
+
+// 9. Bảng user_fridge_items (Nguyên liệu trong tủ lạnh người dùng)
+model UserFridgeItem {
+  userId       String   @map("user_id") @db.Uuid
+  ingredientId Int      @map("ingredient_id")
+  quantity     Decimal? @db.Decimal(10, 2)
+  updatedAt    DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+
+  user       User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  ingredient Ingredient @relation(fields: [ingredientId], references: [id], onDelete: Cascade)
+
+  @@id([userId, ingredientId])
+  @@index([userId])
+  @@index([ingredientId])
+  @@map("user_fridge_items")
+}
