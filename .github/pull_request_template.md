@@ -1,21 +1,11 @@
-### 1. Mục đích thay đổi (Purpose)
-<!-- Tóm tắt ngắn gọn mục tiêu kỹ thuật, tính năng hoặc lỗi được xử lý trong PR này -->
-
-### 2. Chi tiết kỹ thuật (Key Changes)
-<!-- Liệt kê các thay đổi trọng tâm: API mới, màn hình UI, cập nhật database, v.v. -->
-- 
-- 
+### 1. Tóm tắt công việc đã thực hiện (Summary)
+<!-- Gạch đầu dòng tóm tắt ngắn gọn các tính năng, thay đổi kỹ thuật hoặc lỗi đã được xử lý trong PR này -->
 - 
 
-### 3. Phương thức kiểm thử (Verification)
-<!-- Đánh dấu [x] vào các hạng mục đã hoàn thành kiểm thử thực tế -->
-- [ ] Unit Test / Integration Test đã chạy thành công
-- [ ] Đã kiểm thử luồng hoạt động trực tiếp (Local test)
-- [ ] Đính kèm ảnh chụp màn hình / video demo (nếu có thay đổi UI Android)
+### 2. Hình ảnh / Video minh chứng (Screenshots / Recordings)
+<!-- BẮT BUỘC nếu PR có thay đổi hoặc tạo mới giao diện người dùng (UI): Hãy kéo thả ảnh chụp màn hình hoặc video demo vào đây -->
 
-### 4. Bảng kiểm tra chất lượng (Self-Review Checklist)
-- [ ] Đã tự rà soát lại toàn bộ diff code trước khi tạo PR
-- [ ] Không còn `console.log`, mã nguồn thừa hoặc comment rác
-- [ ] Không chứa thông tin bí mật (Secret keys, token, mật khẩu, file .env)
-- [ ] Đã cập nhật `develop` mới nhất vào nhánh để đảm bảo không có conflict
 
+### 3. Lưu ý (Notes)
+<!-- Ghi chú lại những điều cần lưu ý cho Reviewer hoặc các thành viên khác khi kéo code về (ví dụ: cần chạy migration, biến môi trường mới trong .env, thư viện mới,...) hoặc bỏ trống nếu không có -->
+- 
