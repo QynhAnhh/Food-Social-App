@@ -1,0 +1,3 @@
+-- AlterEnum
+ALTER TYPE "RecipeStatus" ADD VALUE 'PENDING_REVIEW' BEFORE 'PUBLISHED';
+

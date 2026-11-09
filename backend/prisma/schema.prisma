@@ -16,6 +16,7 @@ enum Role {
 // Enum trạng thái công thức
 enum RecipeStatus {
   DRAFT
+  PENDING_REVIEW
   PUBLISHED
   HIDDEN
 }
