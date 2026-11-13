@@ -1,0 +1,17 @@
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: food_social_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: "123456"
+      POSTGRES_DB: food_social_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - food_social_data:/var/lib/postgresql/data
+
+volumes:
+  food_social_data:
