@@ -54,19 +54,21 @@ model Category {
 }
 
 model DietaryRegime {
-  id      Int                @id @default(autoincrement())
-  name    String             @unique
-  slug    String             @unique
-  recipes RecipeDietaryTag[]
+  id          Int                @id @default(autoincrement())
+  name        String             @unique
+  slug        String             @unique
+  description String?
+  recipes     RecipeDietaryTag[]
 
   @@map("dietary_regimes")
 }
 
 model Ingredient {
-  id          Int     @id @default(autoincrement())
-  name        String  @unique
-  standardUnit String @map("standard_unit") // gram, ml, quả, muỗng...
-  imageUrl    String? @map("image_url")
+  id               Int     @id @default(autoincrement())
+  name             String  @unique
+  standardUnit     String  @map("standard_unit") // gram, ml, quả, muỗng...
+  imageUrl         String? @map("image_url")
+  isAllergenCommon Boolean @default(false) @map("is_allergen_common")
 
   recipeIngredients RecipeIngredient[]
   userAllergies     UserAllergy[]

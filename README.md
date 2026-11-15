@@ -1,10 +1,10 @@
-# 🍳 Food Social App
+#  Food Social App
 
 > **Mạng xã hội ẩm thực thông minh kết hợp quản lý tủ lạnh, danh sách đi chợ và cá nhân hóa chế độ dinh dưỡng.**
 
 ---
 
-## 📖 1. Giới thiệu tổng quan
+##  1. Giới thiệu tổng quan
 
 **Food Social App** là nền tảng ứng dụng di động dành cho cộng đồng yêu nấu ăn. Không chỉ dừng lại ở việc chia sẻ và tìm kiếm công thức, ứng dụng giải quyết triệt để các bài toán thực tế hàng ngày trong căn bếp:
 * **"Hôm nay ăn gì với những gì còn trong tủ lạnh?"** $\rightarrow$ Hệ thống gợi ý công thức dựa trên nguyên liệu sẵn có.
@@ -14,44 +14,44 @@
 
 ---
 
-## ✨ 2. Các tính năng cốt lõi
+##  2. Các tính năng cốt lõi
 
-### 🔐 Quản lý Tài khoản & Cá nhân hóa
+###  Quản lý Tài khoản & Cá nhân hóa
 * **Đăng nhập an toàn:** Tích hợp Google Sign-In (Firebase Authentication) nhanh chóng, bảo mật cao.
 * **Định danh độc nhất:** Mỗi người dùng thiết lập một `nickname` duy nhất để định danh và phục vụ tìm kiếm.
 * **Hồ sơ dị ứng:** Thiết lập danh sách các nguyên liệu gây dị ứng của bản thân để hệ thống tự động cảnh báo và loại trừ khi khám phá món ăn.
 
-### 🍲 Quản lý Công thức & Danh mục
+###  Quản lý Công thức & Danh mục
 * **Sáng tạo công thức:** Đăng tải bài viết kèm hình ảnh minh họa, khẩu phần, thời gian nấu và hướng dẫn chi tiết từng bước.
 * **Từ điển nguyên liệu chuẩn:** Định lượng nguyên liệu theo đơn vị chuẩn (`gram`, `ml`, `quả`), phục vụ tính toán tự động.
 * **Phân loại đa dạng:** Phân nhóm theo danh mục bữa ăn (Bữa chính, Tráng miệng, Bánh) và gắn thẻ chế độ ăn kiêng (Eat Clean, Keto, Ăn chay, Low-Carb...).
 * **Bộ sưu tập yêu thích:** Lưu lại những công thức tâm đắc vào danh sách cá nhân để xem lại nhanh chóng.
 
-### 🧊 Tủ lạnh thông minh (Smart Fridge)
+###  Tủ lạnh thông minh (Smart Fridge)
 * Người dùng cập nhật các nguyên liệu hiện có trong bếp.
 * Thuật toán đối chiếu thông minh tự động phân tích và xếp hạng các công thức nấu ăn có **tỷ lệ khớp nguyên liệu cao nhất** lên đầu danh sách.
 
-### 🛒 Danh sách đi chợ & Truy vết nguồn (Smart Shopping List)
+###  Danh sách đi chợ & Truy vết nguồn (Smart Shopping List)
 * Cho phép thêm nguyên liệu từ nhiều món ăn khác nhau vào chung một giỏ hàng.
 * **Tự động cộng dồn:** Các nguyên liệu trùng lặp tự động được cộng tổng khối lượng theo đơn vị chuẩn (ví dụ: Thịt bò $300g$ + $200g = 500g$).
 * **Truy vết công thức:** Nhấn vào từng mục để xem chi tiết nguyên liệu đó được đóng góp từ những món ăn nào với số lượng bao nhiêu.
 
-### 🔍 Tìm kiếm toàn cục & Bộ lọc cá nhân (Saved Filters)
+###  Tìm kiếm toàn cục & Bộ lọc cá nhân (Saved Filters)
 * **Global Search:** Thanh tìm kiếm đa năng hỗ trợ tìm kiếm song song cả công thức nấu ăn và hồ sơ đầu bếp theo nickname.
 * **Lưu bộ lọc 1 chạm:** Lưu lại các tổ hợp bộ lọc phức tạp (Danh mục + Chế độ ăn + Thời gian tối đa + Loại trừ dị ứng) để áp dụng ngay lập tức cho những lần mở app sau mà không cần chọn lại từ đầu.
 
-### 👥 Tương tác cộng đồng & Mạng xã hội
+###  Tương tác cộng đồng & Mạng xã hội
 * **Follow & News Feed:** Theo dõi các đầu bếp yêu thích và cập nhật công thức mới nhất qua Bảng tin thời gian thực.
 * **Đánh giá đa phương tiện:** Chấm điểm sao (1–5 sao), viết bình luận đánh giá chi tiết.
 * **Cooksnap:** Tải lên hình ảnh món ăn tự nấu thực tế để xác thực chất lượng và tương tác cùng tác giả công thức.
 
-### 🔔 Hệ thống thông báo & Cấu hình đám mây
+###  Hệ thống thông báo & Cấu hình đám mây
 * **Push Notifications thời gian thực:** Nhận thông báo tức thì qua Firebase Cloud Messaging (FCM) khi có người theo dõi, đánh giá hoặc đăng Cooksnap vào công thức của mình.
 * **App Links (Deep Linking):** Chia sẻ liên kết mở thẳng trang chi tiết công thức trên ứng dụng di động.
 
 ---
 
-## 🏗️ 3. Kiến trúc hệ thống & Ngăn xếp công nghệ
+##  3. Kiến trúc hệ thống & Ngăn xếp công nghệ
 
 Hệ thống được thiết kế theo mô hình **Hybrid Client-Server** kết hợp **Modular Monolith**:
 
@@ -103,7 +103,7 @@ flowchart TD
 
 ---
 
-## 📂 4. Cấu trúc thư mục dự án
+##  4. Cấu trúc thư mục dự án
 
 ```text
 Food-Social-App/
@@ -140,7 +140,7 @@ Food-Social-App/
 
 ---
 
-## 🗺️ 5. Lộ trình phát triển 4 giai đoạn (Roadmap)
+##  5. Lộ trình phát triển 4 giai đoạn (Roadmap)
 
 | Chặng | Tên giai đoạn | Các bảng CSDL trọng tâm | Mục tiêu hoàn thành (Deliverables) |
 | :---: | :--- | :--- | :--- |
@@ -151,7 +151,7 @@ Food-Social-App/
 
 ---
 
-## 🚀 6. Hướng dẫn cài đặt & Khởi chạy (Getting Started)
+##  6. Hướng dẫn cài đặt & Khởi chạy (Getting Started)
 
 ### Yêu cầu môi trường (Prerequisites)
 * **Node.js**: Phiên bản 18.x trở lên.
@@ -191,27 +191,27 @@ Food-Social-App/
 
 ---
 
-## 📚 7. Tài liệu kỹ thuật chi tiết (Technical Documentation)
+##  7. Tài liệu kỹ thuật chi tiết (Technical Documentation)
 
 Để phục vụ phát triển song song giữa Frontend (Android) và Backend (Node.js) mà không phát sinh xung đột, đội ngũ kỹ thuật tuân thủ bộ tài liệu đặc tả chi tiết:
 
-* 🚨 **[Quy chuẩn xử lý lỗi & Bảng mã lỗi toàn hệ thống](docs/conventions/error-handling-codes.md)**: Danh mục các mã `errorCode`, cấu trúc JSON phản hồi lỗi thống nhất và hướng dẫn bắt lỗi trên Android/Node.js.
-* 🔐 **[Kiến trúc Xác thực & Phân quyền](docs/security/auth-and-permissions.md)**: Luồng Google Sign-In, Firebase ID Token, cơ chế refresh token và phân quyền vai trò `USER` / `ADMIN`.
-* 🔄 **[Đặc tả luồng nghiệp vụ: Auth & Profile](docs/business-flows/auth-and-profile-flow.md)**: Sơ đồ tuần tự (Sequence Diagram) luồng đăng nhập, bắt buộc tạo nickname và cấu hình dị ứng.
-* 📜 **[Hợp đồng API Giai đoạn 1](docs/api/auth-user-api.md)**: Đặc tả chi tiết Request/Response cho các endpoint Đăng nhập, Nickname, Profile và Danh mục.
-* 📦 **[Dữ liệu mẫu dùng chung (Mock Data)](docs/mock-data/)**: File JSON chuẩn về [Danh mục](docs/mock-data/categories.json), [Chế độ ăn](docs/mock-data/dietary-regimes.json) và [Từ điển nguyên liệu](docs/mock-data/ingredients.json) dùng để seed database và mock trên Android.
+*  **[Quy chuẩn xử lý lỗi & Bảng mã lỗi toàn hệ thống](docs/conventions/error-handling-codes.md)**: Danh mục các mã `errorCode`, cấu trúc JSON phản hồi lỗi thống nhất và hướng dẫn bắt lỗi trên Android/Node.js.
+*  **[Kiến trúc Xác thực & Phân quyền](docs/security/auth-and-permissions.md)**: Luồng Google Sign-In, Firebase ID Token, cơ chế refresh token và phân quyền vai trò `USER` / `ADMIN`.
+*  **[Đặc tả luồng nghiệp vụ: Auth & Profile](docs/business-flows/auth-and-profile-flow.md)**: Sơ đồ tuần tự (Sequence Diagram) luồng đăng nhập, bắt buộc tạo nickname và cấu hình dị ứng.
+*  **[Hợp đồng API Giai đoạn 1](docs/api/auth-user-api.md)**: Đặc tả chi tiết Request/Response cho các endpoint Đăng nhập, Nickname, Profile và Danh mục.
+*  **[Dữ liệu mẫu dùng chung (Mock Data)](docs/mock-data/)**: File JSON chuẩn về [Danh mục](docs/mock-data/categories.json), [Chế độ ăn](docs/mock-data/dietary-regimes.json) và [Từ điển nguyên liệu](docs/mock-data/ingredients.json) dùng để seed database và mock trên Android.
 
 ---
 
-## 🤝 8. Quy chuẩn đóng góp mã nguồn (Contributing)
+##  8. Quy chuẩn đóng góp mã nguồn (Contributing)
 
 Mọi thành viên tham gia phát triển dự án bắt buộc phải đọc và tuân thủ các quy tắc về đặt tên nhánh, quy chuẩn commit message và quy trình mở Pull Request tại:
 
-👉 **[Xem chi tiết Quy chuẩn Cộng tác tại CONTRIBUTING.md](./CONTRIBUTING.md)**
+ **[Xem chi tiết Quy chuẩn Cộng tác tại CONTRIBUTING.md](./CONTRIBUTING.md)**
 
 ---
 
-## 📄 9. Bản quyền (License)
+##  9. Bản quyền (License)
 
 Dự án được phân phối dưới giấy phép **MIT License**. Chi tiết xem tại file [LICENSE](./LICENSE).
 
