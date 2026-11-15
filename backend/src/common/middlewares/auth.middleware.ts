@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { firebaseAuth } from '../../config/firebase';
 import { prisma } from '../../config/prisma';
+import { ErrorCodes } from '../errors/error-codes';
 
 export interface AuthRequest extends Request {
   user?: {
@@ -18,7 +19,7 @@ export const authenticate = async (req: AuthRequest, res: Response, next: NextFu
     if (!authHeader?.startsWith('Bearer ')) {
       return res.status(401).json({
         success: false,
-        errorCode: 'AUTH_MISSING_TOKEN',
+        errorCode: ErrorCodes.AUTH_MISSING_TOKEN,
         message: 'Vui lòng đăng nhập để tiếp tục.',
       });
     }
@@ -33,7 +34,7 @@ export const authenticate = async (req: AuthRequest, res: Response, next: NextFu
     if (!user) {
       return res.status(401).json({
         success: false,
-        errorCode: 'AUTH_USER_NOT_FOUND',
+        errorCode: ErrorCodes.AUTH_USER_NOT_FOUND,
         message: 'Tài khoản chưa được đồng bộ trên hệ thống.',
       });
     }
@@ -49,7 +50,7 @@ export const authenticate = async (req: AuthRequest, res: Response, next: NextFu
   } catch (error) {
     return res.status(401).json({
       success: false,
-      errorCode: 'AUTH_INVALID_TOKEN',
+      errorCode: ErrorCodes.AUTH_INVALID_TOKEN,
       message: 'Token không hợp lệ hoặc đã hết hạn.',
     });
   }

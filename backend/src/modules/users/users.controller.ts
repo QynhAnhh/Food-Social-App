@@ -5,6 +5,7 @@ import { z } from 'zod';
 import { prisma } from '../../config/prisma';
 import { firebaseBucket } from '../../config/firebase';
 import { AuthRequest } from '../../common/middlewares/auth.middleware';
+import { ErrorCodes } from '../../common/errors';
 
 const upload = multer({
   storage: multer.memoryStorage(),
@@ -49,7 +50,7 @@ export const checkNickname = async (
   if (!nicknameRegex.test(nickname)) {
     return res.status(400).json({
       success: false,
-      errorCode: 'USER_INVALID_NICKNAME_FORMAT',
+      errorCode: ErrorCodes.USER_INVALID_NICKNAME_FORMAT,
       message:
         'Nickname chỉ gồm chữ không dấu, số, dấu chấm hoặc gạch dưới (3-20 ký tự).',
     });
@@ -88,7 +89,7 @@ export const updateProfile = async (
   if (!parsed.success) {
     return res.status(400).json({
       success: false,
-      errorCode: 'VALIDATION_ERROR',
+      errorCode: ErrorCodes.VALIDATION_ERROR,
       message: parsed.error.errors[0].message,
     });
   }
@@ -117,7 +118,7 @@ export const updateProfile = async (
     if (taken) {
       return res.status(409).json({
         success: false,
-        errorCode: 'USER_NICKNAME_TAKEN',
+        errorCode: ErrorCodes.USER_NICKNAME_TAKEN,
         message:
           'Nickname này đã được sử dụng, vui lòng chọn tên khác.',
       });
@@ -185,7 +186,7 @@ export const uploadAvatar = async (
   if (!req.file) {
     return res.status(400).json({
       success: false,
-      errorCode: 'FILE_REQUIRED',
+      errorCode: ErrorCodes.FILE_REQUIRED,
       message:
         'Vui lòng đính kèm file ảnh trong trường "avatar".',
     });
@@ -200,7 +201,7 @@ export const uploadAvatar = async (
   if (!allowedMimeTypes.includes(req.file.mimetype)) {
     return res.status(400).json({
       success: false,
-      errorCode: 'INVALID_FILE_TYPE',
+      errorCode: ErrorCodes.INVALID_FILE_TYPE,
       message: 'Chỉ chấp nhận định dạng ảnh JPG, PNG hoặc WEBP.',
     });
   }

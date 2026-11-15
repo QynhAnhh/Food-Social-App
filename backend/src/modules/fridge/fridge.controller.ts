@@ -4,6 +4,7 @@ import { z } from 'zod';
 import { prisma } from '../../config/prisma';
 import { AuthRequest } from '../../common/middlewares/auth.middleware';
 import { matchFridgeRecipes } from './fridge.matching';
+import { ErrorCodes } from '../../common/errors';
 
 const addFridgeItemSchema = z.object({
   ingredientId: z.number().int().positive(),
@@ -55,7 +56,7 @@ export const addFridgeItem = async (
   if (!parsed.success) {
     return res.status(400).json({
       success: false,
-      errorCode: 'VALIDATION_ERROR',
+      errorCode: ErrorCodes.VALIDATION_ERROR,
       message: parsed.error.errors[0].message,
     });
   }
@@ -105,7 +106,7 @@ export const updateFridgeItem = async (
   if (!parsed.success) {
     return res.status(400).json({
       success: false,
-      errorCode: 'VALIDATION_ERROR',
+      errorCode: ErrorCodes.VALIDATION_ERROR,
       message: parsed.error.errors[0].message,
     });
   }
@@ -122,7 +123,7 @@ export const updateFridgeItem = async (
   if (!existing) {
     return res.status(404).json({
       success: false,
-      errorCode: 'FRIDGE_ITEM_NOT_FOUND',
+      errorCode: ErrorCodes.FRIDGE_ITEM_NOT_FOUND,
       message: 'Không tìm thấy nguyên liệu này trong tủ lạnh của bạn.',
     });
   }
@@ -172,7 +173,7 @@ export const deleteFridgeItem = async (
   if (deleted.count === 0) {
     return res.status(404).json({
       success: false,
-      errorCode: 'FRIDGE_ITEM_NOT_FOUND',
+      errorCode: ErrorCodes.FRIDGE_ITEM_NOT_FOUND,
       message: 'Không tìm thấy nguyên liệu cần xóa.',
     });
   }

@@ -7,6 +7,7 @@ import {
   updateRecipeTransaction,
   RecipeTransactionError,
 } from './recipe.transaction';
+import { ErrorCodes } from '../../common/errors';
 
 export const getRecipeById = async (
   req: AuthRequest,
@@ -78,7 +79,7 @@ export const getRecipeById = async (
   if (!recipe) {
     return res.status(404).json({
       success: false,
-      errorCode: 'RECIPE_NOT_FOUND',
+      errorCode: ErrorCodes.RECIPE_NOT_FOUND,
       message: 'Công thức nấu ăn không tồn tại hoặc đã bị xóa.',
     });
   }
@@ -175,7 +176,7 @@ export const createRecipe = async (req: AuthRequest, res: Response) => {
     console.error('Create recipe transaction error:', error);
     return res.status(500).json({
       success: false,
-      errorCode: 'INTERNAL_SERVER_ERROR',
+      errorCode: ErrorCodes.INTERNAL_SERVER_ERROR,
       message: 'Đã có lỗi xảy ra khi tạo công thức.',
     });
   }
@@ -208,7 +209,7 @@ export const updateRecipe = async (req: AuthRequest, res: Response) => {
     console.error('Update recipe transaction error:', error);
     return res.status(500).json({
       success: false,
-      errorCode: 'INTERNAL_SERVER_ERROR',
+      errorCode: ErrorCodes.INTERNAL_SERVER_ERROR,
       message: 'Đã có lỗi xảy ra khi cập nhật công thức.',
     });
   }

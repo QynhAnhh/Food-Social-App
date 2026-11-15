@@ -3,6 +3,7 @@ import { Request, Response } from 'express';
 import { z } from 'zod';
 import { firebaseAuth } from '../../config/firebase';
 import { prisma } from '../../config/prisma';
+import { ErrorCodes } from '../../common/errors';
 
 const googleLoginSchema = z.object({
   idToken: z.string().min(1, 'idToken không được để trống'),
@@ -15,7 +16,7 @@ export const googleLogin = async (req: Request, res: Response) => {
     if (!parsed.success) {
       return res.status(400).json({
         success: false,
-        errorCode: 'VALIDATION_ERROR',
+        errorCode: ErrorCodes.VALIDATION_ERROR,
         message: parsed.error.errors[0].message,
       });
     }
@@ -30,7 +31,7 @@ export const googleLogin = async (req: Request, res: Response) => {
     if (!email) {
       return res.status(400).json({
         success: false,
-        errorCode: 'AUTH_EMAIL_REQUIRED',
+        errorCode: ErrorCodes.AUTH_EMAIL_REQUIRED,
         message: 'Tài khoản Google không cung cấp địa chỉ email.',
       });
     }
@@ -97,7 +98,7 @@ export const googleLogin = async (req: Request, res: Response) => {
 
     return res.status(401).json({
       success: false,
-      errorCode: 'AUTH_INVALID_GOOGLE_TOKEN',
+      errorCode: ErrorCodes.AUTH_INVALID_GOOGLE_TOKEN,
       message: 'Firebase ID Token không hợp lệ hoặc đã hết hạn.',
     });
   }

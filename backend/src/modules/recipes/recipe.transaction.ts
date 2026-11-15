@@ -1,19 +1,15 @@
 import { PrismaClient } from '@prisma/client';
 import { prisma as defaultPrisma } from '../../config/prisma';
+import { AppError, ErrorCodes, ErrorCode } from '../../common/errors';
 
 /**
  * Lớp lỗi tùy biến cho nghiệp vụ Recipe Transaction
  * Tuân thủ mã lỗi hệ thống trong docs/conventions/error-handling-codes.md
  */
-export class RecipeTransactionError extends Error {
-  public errorCode: string;
-  public statusCode: number;
-
-  constructor(message: string, errorCode: string, statusCode = 400) {
-    super(message);
+export class RecipeTransactionError extends AppError {
+  constructor(message: string, errorCode: ErrorCode | string, statusCode = 400) {
+    super(statusCode, errorCode, message);
     this.name = 'RecipeTransactionError';
-    this.errorCode = errorCode;
-    this.statusCode = statusCode;
   }
 }
 
@@ -66,36 +62,36 @@ export async function createRecipeTransaction(
 ) {
   // 1. Kiểm tra tính hợp lệ của dữ liệu đầu vào
   if (!data.authorId) {
-    throw new RecipeTransactionError('Thiếu thông tin tác giả (authorId).', 'INVALID_INPUT', 400);
+    throw new RecipeTransactionError('Thiếu thông tin tác giả (authorId).', ErrorCodes.INVALID_INPUT, 400);
   }
   if (!data.categoryId) {
-    throw new RecipeTransactionError('Thiếu danh mục món ăn (categoryId).', 'CATEGORY_NOT_FOUND', 400);
+    throw new RecipeTransactionError('Thiếu danh mục món ăn (categoryId).', ErrorCodes.CATEGORY_NOT_FOUND, 400);
   }
   if (!data.title || typeof data.title !== 'string' || !data.title.trim()) {
-    throw new RecipeTransactionError('Tiêu đề công thức không được để trống.', 'INVALID_INPUT', 400);
+    throw new RecipeTransactionError('Tiêu đề công thức không được để trống.', ErrorCodes.INVALID_INPUT, 400);
   }
   if (!data.thumbnailUrl) {
-    throw new RecipeTransactionError('Ảnh đại diện công thức không được để trống.', 'INVALID_INPUT', 400);
+    throw new RecipeTransactionError('Ảnh đại diện công thức không được để trống.', ErrorCodes.INVALID_INPUT, 400);
   }
   if (typeof data.cookingTime !== 'number' || data.cookingTime <= 0) {
-    throw new RecipeTransactionError('Thời gian nấu phải là số nguyên dương.', 'INVALID_INPUT', 400);
+    throw new RecipeTransactionError('Thời gian nấu phải là số nguyên dương.', ErrorCodes.INVALID_INPUT, 400);
   }
   if (!Array.isArray(data.steps) || data.steps.length === 0) {
-    throw new RecipeTransactionError('Công thức phải có ít nhất một bước thực hiện.', 'RECIPE_MISSING_STEPS', 400);
+    throw new RecipeTransactionError('Công thức phải có ít nhất một bước thực hiện.', ErrorCodes.RECIPE_MISSING_STEPS, 400);
   }
   if (!Array.isArray(data.ingredients) || data.ingredients.length === 0) {
-    throw new RecipeTransactionError('Công thức phải có ít nhất một nguyên liệu.', 'RECIPE_MISSING_INGREDIENTS', 400);
+    throw new RecipeTransactionError('Công thức phải có ít nhất một nguyên liệu.', ErrorCodes.RECIPE_MISSING_INGREDIENTS, 400);
   }
 
   // 2. Kiểm tra trùng lặp stepNumber và ingredientId trong request
   const stepNumbers = data.steps.map((s) => s.stepNumber);
   if (new Set(stepNumbers).size !== stepNumbers.length) {
-    throw new RecipeTransactionError('Số thứ tự các bước không được trùng lặp.', 'INVALID_STEP_ORDER', 400);
+    throw new RecipeTransactionError('Số thứ tự các bước không được trùng lặp.', ErrorCodes.INVALID_STEP_ORDER, 400);
   }
 
   const ingredientIds = data.ingredients.map((i) => i.ingredientId);
   if (new Set(ingredientIds).size !== ingredientIds.length) {
-    throw new RecipeTransactionError('Danh sách nguyên liệu bị trùng lặp nguyên liệu.', 'DUPLICATE_INGREDIENT', 400);
+    throw new RecipeTransactionError('Danh sách nguyên liệu bị trùng lặp nguyên liệu.', ErrorCodes.DUPLICATE_INGREDIENT, 400);
   }
 
   // 3. Thực thi Interactive Transaction
@@ -105,7 +101,7 @@ export async function createRecipeTransaction(
       where: { id: data.authorId },
     });
     if (!author) {
-      throw new RecipeTransactionError('Tác giả không tồn tại.', 'USER_NOT_FOUND', 404);
+      throw new RecipeTransactionError('Tác giả không tồn tại.', ErrorCodes.USER_NOT_FOUND, 404);
     }
 
     // 3.2. Kiểm tra danh mục tồn tại
@@ -113,7 +109,7 @@ export async function createRecipeTransaction(
       where: { id: data.categoryId },
     });
     if (!category) {
-      throw new RecipeTransactionError('Danh mục món ăn được chọn không hợp lệ.', 'CATEGORY_NOT_FOUND', 404);
+      throw new RecipeTransactionError('Danh mục món ăn được chọn không hợp lệ.', ErrorCodes.CATEGORY_NOT_FOUND, 404);
     }
 
     // 3.3. Kiểm tra toàn bộ nguyên liệu tồn tại trong từ điển
@@ -122,7 +118,7 @@ export async function createRecipeTransaction(
       select: { id: true },
     });
     if (existingIngredients.length !== ingredientIds.length) {
-      throw new RecipeTransactionError('Một hoặc nhiều nguyên liệu không tồn tại trong từ điển chuẩn.', 'INGREDIENT_NOT_FOUND', 404);
+      throw new RecipeTransactionError('Một hoặc nhiều nguyên liệu không tồn tại trong từ điển chuẩn.', ErrorCodes.INGREDIENT_NOT_FOUND, 404);
     }
 
     // 3.4. Kiểm tra các thẻ chế độ ăn kiêng (nếu có truyền)
@@ -132,7 +128,7 @@ export async function createRecipeTransaction(
         select: { id: true },
       });
       if (existingTags.length !== data.dietaryTagIds.length) {
-        throw new RecipeTransactionError('Một hoặc nhiều chế độ ăn kiêng không tồn tại.', 'DIETARY_REGIME_NOT_FOUND', 404);
+        throw new RecipeTransactionError('Một hoặc nhiều chế độ ăn kiêng không tồn tại.', ErrorCodes.DIETARY_REGIME_NOT_FOUND, 404);
       }
     }
 
@@ -226,28 +222,28 @@ export async function updateRecipeTransaction(
   prismaClient: PrismaClient = defaultPrisma as any,
 ) {
   if (!recipeId) {
-    throw new RecipeTransactionError('Thiếu mã công thức (recipeId).', 'INVALID_INPUT', 400);
+    throw new RecipeTransactionError('Thiếu mã công thức (recipeId).', ErrorCodes.INVALID_INPUT, 400);
   }
 
   // Kiểm tra hợp lệ nếu có cập nhật steps
   if (data.steps !== undefined) {
     if (!Array.isArray(data.steps) || data.steps.length === 0) {
-      throw new RecipeTransactionError('Công thức phải có ít nhất một bước thực hiện.', 'RECIPE_MISSING_STEPS', 400);
+      throw new RecipeTransactionError('Công thức phải có ít nhất một bước thực hiện.', ErrorCodes.RECIPE_MISSING_STEPS, 400);
     }
     const stepNumbers = data.steps.map((s) => s.stepNumber);
     if (new Set(stepNumbers).size !== stepNumbers.length) {
-      throw new RecipeTransactionError('Số thứ tự các bước không được trùng lặp.', 'INVALID_STEP_ORDER', 400);
+      throw new RecipeTransactionError('Số thứ tự các bước không được trùng lặp.', ErrorCodes.INVALID_STEP_ORDER, 400);
     }
   }
 
   // Kiểm tra hợp lệ nếu có cập nhật ingredients
   if (data.ingredients !== undefined) {
     if (!Array.isArray(data.ingredients) || data.ingredients.length === 0) {
-      throw new RecipeTransactionError('Công thức phải có ít nhất một nguyên liệu.', 'RECIPE_MISSING_INGREDIENTS', 400);
+      throw new RecipeTransactionError('Công thức phải có ít nhất một nguyên liệu.', ErrorCodes.RECIPE_MISSING_INGREDIENTS, 400);
     }
     const ingredientIds = data.ingredients.map((i) => i.ingredientId);
     if (new Set(ingredientIds).size !== ingredientIds.length) {
-      throw new RecipeTransactionError('Danh sách nguyên liệu bị trùng lặp nguyên liệu.', 'DUPLICATE_INGREDIENT', 400);
+      throw new RecipeTransactionError('Danh sách nguyên liệu bị trùng lặp nguyên liệu.', ErrorCodes.DUPLICATE_INGREDIENT, 400);
     }
   }
 
@@ -257,12 +253,12 @@ export async function updateRecipeTransaction(
       where: { id: recipeId },
     });
     if (!existingRecipe) {
-      throw new RecipeTransactionError('Công thức không tồn tại hoặc đã bị xóa.', 'RECIPE_NOT_FOUND', 404);
+      throw new RecipeTransactionError('Công thức không tồn tại hoặc đã bị xóa.', ErrorCodes.RECIPE_NOT_FOUND, 404);
     }
 
     // 2. Kiểm tra quyền sở hữu (nếu có truyền authorId yêu cầu)
     if (data.authorId && existingRecipe.authorId !== data.authorId) {
-      throw new RecipeTransactionError('Bạn không có quyền chỉnh sửa công thức của người khác.', 'NOT_RECIPE_OWNER', 403);
+      throw new RecipeTransactionError('Bạn không có quyền chỉnh sửa công thức của người khác.', ErrorCodes.NOT_RECIPE_OWNER, 403);
     }
 
     // 3. Kiểm tra danh mục mới (nếu có cập nhật)
@@ -271,7 +267,7 @@ export async function updateRecipeTransaction(
         where: { id: data.categoryId },
       });
       if (!category) {
-        throw new RecipeTransactionError('Danh mục món ăn được chọn không hợp lệ.', 'CATEGORY_NOT_FOUND', 404);
+        throw new RecipeTransactionError('Danh mục món ăn được chọn không hợp lệ.', ErrorCodes.CATEGORY_NOT_FOUND, 404);
       }
     }
 
@@ -283,7 +279,7 @@ export async function updateRecipeTransaction(
         select: { id: true },
       });
       if (existingIngredients.length !== ingredientIds.length) {
-        throw new RecipeTransactionError('Một hoặc nhiều nguyên liệu không tồn tại trong từ điển chuẩn.', 'INGREDIENT_NOT_FOUND', 404);
+        throw new RecipeTransactionError('Một hoặc nhiều nguyên liệu không tồn tại trong từ điển chuẩn.', ErrorCodes.INGREDIENT_NOT_FOUND, 404);
       }
     }
 
@@ -294,7 +290,7 @@ export async function updateRecipeTransaction(
         select: { id: true },
       });
       if (existingTags.length !== data.dietaryTagIds.length) {
-        throw new RecipeTransactionError('Một hoặc nhiều chế độ ăn kiêng không tồn tại.', 'DIETARY_REGIME_NOT_FOUND', 404);
+        throw new RecipeTransactionError('Một hoặc nhiều chế độ ăn kiêng không tồn tại.', ErrorCodes.DIETARY_REGIME_NOT_FOUND, 404);
       }
     }
 
