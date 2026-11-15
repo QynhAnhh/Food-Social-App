@@ -6,6 +6,7 @@ import { authRouter } from './modules/auth/auth.routes';
 import { usersRouter } from './modules/users/users.routes';
 import { fridgeRouter } from './modules/fridge/fridge.routes';
 import { recipesRouter } from './modules/recipes/recipes.routes';
+import { errorHandler } from './common/middlewares/error.middleware';
 
 export const app = express();
 
@@ -43,3 +44,8 @@ app.use((_req, res) => {
     message: 'API endpoint not found',
   });
 });
+
+// ================= GLOBAL ERROR HANDLER =================
+
+app.use(errorHandler);
+

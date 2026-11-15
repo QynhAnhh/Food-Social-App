@@ -2,6 +2,12 @@
 import { Response } from 'express';
 import { prisma } from '../../config/prisma';
 import { AuthRequest } from '../../common/middlewares/auth.middleware';
+import {
+  createRecipeTransaction,
+  updateRecipeTransaction,
+  RecipeTransactionError,
+} from './recipe.transaction';
+import { ErrorCodes } from '../../common/errors';
 
 export const getRecipeById = async (
   req: AuthRequest,
@@ -73,7 +79,7 @@ export const getRecipeById = async (
   if (!recipe) {
     return res.status(404).json({
       success: false,
-      errorCode: 'RECIPE_NOT_FOUND',
+      errorCode: ErrorCodes.RECIPE_NOT_FOUND,
       message: 'Công thức nấu ăn không tồn tại hoặc đã bị xóa.',
     });
   }
@@ -144,3 +150,68 @@ export const getRecipeById = async (
     },
   });
 };
+
+export const createRecipe = async (req: AuthRequest, res: Response) => {
+  try {
+    const authorId = req.user!.id;
+    const recipe = await createRecipeTransaction({
+      ...req.body,
+      authorId,
+    });
+
+    return res.status(201).json({
+      success: true,
+      message: 'Tạo công thức thành công.',
+      data: recipe,
+    });
+  } catch (error: any) {
+    if (error instanceof RecipeTransactionError) {
+      return res.status(error.statusCode).json({
+        success: false,
+        errorCode: error.errorCode,
+        message: error.message,
+      });
+    }
+
+    console.error('Create recipe transaction error:', error);
+    return res.status(500).json({
+      success: false,
+      errorCode: ErrorCodes.INTERNAL_SERVER_ERROR,
+      message: 'Đã có lỗi xảy ra khi tạo công thức.',
+    });
+  }
+};
+
+export const updateRecipe = async (req: AuthRequest, res: Response) => {
+  try {
+    const recipeId = String(req.params.id);
+    const authorId = req.user!.id;
+
+    const updatedRecipe = await updateRecipeTransaction(recipeId, {
+      ...req.body,
+      authorId,
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: 'Cập nhật công thức thành công.',
+      data: updatedRecipe,
+    });
+  } catch (error: any) {
+    if (error instanceof RecipeTransactionError) {
+      return res.status(error.statusCode).json({
+        success: false,
+        errorCode: error.errorCode,
+        message: error.message,
+      });
+    }
+
+    console.error('Update recipe transaction error:', error);
+    return res.status(500).json({
+      success: false,
+      errorCode: ErrorCodes.INTERNAL_SERVER_ERROR,
+      message: 'Đã có lỗi xảy ra khi cập nhật công thức.',
+    });
+  }
+};
+

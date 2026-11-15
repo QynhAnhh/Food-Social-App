@@ -1,4 +1,4 @@
-﻿export const prismaMock = {
+export const prismaMock = {
   user: {
     findUnique: jest.fn(),
     findFirst: jest.fn(),
@@ -18,6 +18,32 @@
     deleteMany: jest.fn(),
   },
   recipe: {
+    findMany: jest.fn(),
+    findUnique: jest.fn(),
+    create: jest.fn(),
+    update: jest.fn(),
+  },
+  recipeStep: {
+    createMany: jest.fn(),
+    deleteMany: jest.fn(),
+  },
+  recipeIngredient: {
+    createMany: jest.fn(),
+    deleteMany: jest.fn(),
+  },
+  recipeDietaryTag: {
+    createMany: jest.fn(),
+    deleteMany: jest.fn(),
+  },
+  category: {
+    findUnique: jest.fn(),
+    findFirst: jest.fn(),
+  },
+  ingredient: {
+    findMany: jest.fn(),
+    findUnique: jest.fn(),
+  },
+  dietaryRegime: {
     findMany: jest.fn(),
     findUnique: jest.fn(),
   },
