@@ -3,6 +3,7 @@ import { Response } from 'express';
 import { z } from 'zod';
 import { prisma } from '../../config/prisma';
 import { AuthRequest } from '../../common/middlewares/auth.middleware';
+import { matchFridgeRecipes } from './fridge.matching';
 
 const addFridgeItemSchema = z.object({
   ingredientId: z.number().int().positive(),
@@ -184,160 +185,17 @@ export const deleteFridgeItem = async (
 };
 
 // 5. GET /api/v1/fridge/recommendations
-// Gợi ý công thức từ nguyên liệu trong tủ lạnh
+// Gợi ý công thức từ nguyên liệu trong tủ lạnh (Task FSA-23)
 export const getFridgeRecommendations = async (
   req: AuthRequest,
   res: Response,
 ) => {
   const userId = req.user!.id;
-
-  // Lấy nguyên liệu trong tủ lạnh và danh sách dị ứng
-  const [fridgeItems, userAllergies] = await Promise.all([
-    prisma.userFridgeItem.findMany({
-      where: { userId },
-    }),
-    prisma.userAllergy.findMany({
-      where: { userId },
-    }),
-  ]);
-
-  if (fridgeItems.length === 0) {
-    return res.status(200).json({
-      success: true,
-      message:
-        'Tủ lạnh đang trống. Hãy thêm nguyên liệu để nhận gợi ý món ăn.',
-      data: [],
-    });
-  }
-
-  const fridgeMap = new Map<number, number>(
-    fridgeItems.map((item) => [
-      item.ingredientId,
-      item.quantity,
-    ]),
-  );
-
-  const fridgeIngredientIds = Array.from(fridgeMap.keys());
-
-  const allergyIngredientIds = userAllergies.map(
-    (a) => a.ingredientId,
-  );
-
-  // Tìm công thức có ít nhất một nguyên liệu trong tủ lạnh
-  // và không chứa bất kỳ nguyên liệu gây dị ứng nào
-  const candidateRecipes = await prisma.recipe.findMany({
-    where: {
-      ingredients: {
-        some: {
-          ingredientId: { in: fridgeIngredientIds },
-        },
-        ...(allergyIngredientIds.length > 0 && {
-          none: {
-            ingredientId: { in: allergyIngredientIds },
-          },
-        }),
-      },
-    },
-    include: {
-      author: {
-        select: {
-          id: true,
-          nickname: true,
-          fullName: true,
-          avatarUrl: true,
-        },
-      },
-      category: {
-        select: {
-          id: true,
-          name: true,
-          slug: true,
-        },
-      },
-      ingredients: {
-        include: { ingredient: true },
-      },
-    },
-  });
-
-  // Tính tỷ lệ nguyên liệu khớp và nguyên liệu còn thiếu
-  const scoredRecipes = candidateRecipes.map((recipe) => {
-    const totalIngredients = recipe.ingredients.length;
-
-    const matchedIngredients: any[] = [];
-    const missingIngredients: any[] = [];
-
-    for (const reqIng of recipe.ingredients) {
-      const inFridgeQty = fridgeMap.get(reqIng.ingredientId);
-
-      if (inFridgeQty !== undefined) {
-        matchedIngredients.push({
-          ingredientId: reqIng.ingredientId,
-          name: reqIng.ingredient.name,
-          requiredQuantity: reqIng.quantity,
-          availableQuantity: inFridgeQty,
-          isEnoughQuantity: inFridgeQty >= reqIng.quantity,
-          unit: reqIng.ingredient.standardUnit,
-        });
-      } else {
-        missingIngredients.push({
-          ingredientId: reqIng.ingredientId,
-          name: reqIng.ingredient.name,
-          missingQuantity: reqIng.quantity,
-          unit: reqIng.ingredient.standardUnit,
-        });
-      }
-    }
-
-    const matchPercentage =
-      totalIngredients > 0
-        ? Math.round(
-            (matchedIngredients.length / totalIngredients) * 100,
-          )
-        : 0;
-
-    return {
-      id: recipe.id,
-      title: recipe.title,
-      thumbnailUrl: recipe.thumbnailUrl,
-      cookingTime: recipe.cookingTime,
-      servings: recipe.servings,
-      averageRating: recipe.averageRating,
-      category: recipe.category,
-      author: recipe.author,
-      matchPercentage,
-      matchedCount: matchedIngredients.length,
-      totalIngredients,
-      matchedIngredients,
-      missingIngredients,
-    };
-  });
-
-  // Sắp xếp:
-  // 1. Tỷ lệ nguyên liệu khớp giảm dần
-  // 2. Số nguyên liệu thiếu tăng dần
-  // 3. Điểm đánh giá giảm dần
-  scoredRecipes.sort((a, b) => {
-    if (b.matchPercentage !== a.matchPercentage) {
-      return b.matchPercentage - a.matchPercentage;
-    }
-
-    if (
-      a.missingIngredients.length !==
-      b.missingIngredients.length
-    ) {
-      return (
-        a.missingIngredients.length -
-        b.missingIngredients.length
-      );
-    }
-
-    return b.averageRating - a.averageRating;
-  });
+  const result = await matchFridgeRecipes(userId, prisma);
 
   return res.status(200).json({
     success: true,
-    message: 'Gợi ý công thức dựa trên tủ lạnh thành công.',
-    data: scoredRecipes,
+    message: result.message,
+    data: result.data,
   });
 };
