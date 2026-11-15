@@ -12,6 +12,15 @@ enum Role {
   ADMIN
 }
 
+// Enum trạng thái công thức
+enum RecipeStatus {
+  DRAFT
+  PENDING_REVIEW
+  PUBLISHED
+  HIDDEN
+}
+
+// 2. Bảng users (Người dùng cốt lõi)
 model User {
   id          String   @id @default(uuid())
   firebaseUid String   @unique @map("firebase_uid")
