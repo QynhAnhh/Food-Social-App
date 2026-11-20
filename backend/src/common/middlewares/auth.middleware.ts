@@ -13,7 +13,11 @@ export interface AuthRequest extends Request {
   };
 }
 
-export const authenticate = async (req: AuthRequest, res: Response, next: NextFunction) => {
+export const authenticate = async (
+  req: AuthRequest,
+  res: Response,
+  next: NextFunction,
+) => {
   try {
     const authHeader = req.headers.authorization;
     if (!authHeader?.startsWith('Bearer ')) {
@@ -54,4 +58,37 @@ export const authenticate = async (req: AuthRequest, res: Response, next: NextFu
       message: 'Token không hợp lệ hoặc đã hết hạn.',
     });
   }
+};
+
+export const optionalAuthenticate = async (
+  req: AuthRequest,
+  _res: Response,
+  next: NextFunction,
+) => {
+  try {
+    const authHeader = req.headers.authorization;
+    if (!authHeader?.startsWith('Bearer ')) {
+      return next();
+    }
+
+    const token = authHeader.split(' ')[1];
+    const decodedToken = await firebaseAuth.verifyIdToken(token);
+
+    const user = await prisma.user.findUnique({
+      where: { firebaseUid: decodedToken.uid },
+    });
+
+    if (user) {
+      req.user = {
+        id: user.id,
+        firebaseUid: user.firebaseUid,
+        email: user.email,
+        nickname: user.nickname,
+        role: user.role,
+      };
+    }
+  } catch {
+    // Bỏ qua lỗi token đối với route cho phép truy cập không cần đăng nhập
+  }
+  return next();
 };
