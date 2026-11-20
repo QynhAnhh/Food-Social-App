@@ -1,7 +1,13 @@
 
 import { Router } from 'express';
-import { authenticate } from '../../common/middlewares/auth.middleware';
 import {
+  authenticate,
+  optionalAuthenticate,
+} from '../../common/middlewares/auth.middleware';
+import { asyncHandler } from '../../common/middlewares/async-handler';
+
+import {
+  getRecipes,
   getRecipeById,
   createRecipe,
   updateRecipe,
@@ -9,12 +15,26 @@ import {
 
 export const recipesRouter = Router();
 
-// 1. Tạo công thức mới (Transaction nhiều bảng)
-recipesRouter.post('/', authenticate, createRecipe);
+recipesRouter.get(
+  '/',
+  optionalAuthenticate,
+  asyncHandler(getRecipes),
+);
 
-// 2. Chỉnh sửa công thức (Transaction đồng bộ nhiều bảng)
-recipesRouter.put('/:id', authenticate, updateRecipe);
+recipesRouter.get(
+  '/:id',
+  optionalAuthenticate,
+  asyncHandler(getRecipeById),
+);
 
-// 3. Lấy chi tiết công thức theo ID
-recipesRouter.get('/:id', authenticate, getRecipeById);
+recipesRouter.post(
+  '/',
+  authenticate,
+  asyncHandler(createRecipe),
+);
 
+recipesRouter.put(
+  '/:id',
+  authenticate,
+  asyncHandler(updateRecipe),
+);

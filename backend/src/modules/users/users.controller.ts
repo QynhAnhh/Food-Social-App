@@ -208,6 +208,14 @@ export const uploadAvatar = async (
 
   const userId = req.user!.id;
 
+  // Firebase Storage chưa được cấu hình.
+  if (!firebaseBucket) {
+    return res.status(503).json({
+      success: false,
+      message: 'Chức năng upload ảnh đại diện hiện chưa được cấu hình.',
+    });
+  }
+
   const ext = req.file.mimetype.split('/')[1];
 
   const filePath = `avatars/${userId}_${Date.now()}.${ext}`;
