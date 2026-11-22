@@ -7,6 +7,7 @@ import {
 import { asyncHandler } from '../../common/middlewares/async-handler';
 
 import {
+  getNewsFeed,
   cooksnapUpload,
   followUser,
   unfollowUser,
@@ -22,6 +23,19 @@ import {
 } from './social.controller';
 
 export const socialRouter = Router();
+
+// News Feed
+socialRouter.get(
+  '/feed',
+  authenticate,
+  asyncHandler(getNewsFeed),
+);
+
+socialRouter.get(
+  '/news-feed',
+  authenticate,
+  asyncHandler(getNewsFeed),
+);
 
 // Follow
 socialRouter.post(

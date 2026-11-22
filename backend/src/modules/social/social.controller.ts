@@ -41,6 +41,193 @@ const recalculateRecipeRating = async (
   return avg;
 };
 
+// ==================== NEWS FEED ====================
+
+/**
+ * SQL Builder cho bài toán [DB] Query News Feed
+ * Cho phép truy vấn danh sách món ăn từ các đầu bếp đang theo dõi bằng raw SQL tối ưu.
+ */
+export const queryNewsFeedSQL = (
+  followerId: string,
+  limit: number = 10,
+  offset: number = 0,
+) => {
+  return Prisma.sql`
+    SELECT 
+      r.id,
+      r.title,
+      r.description,
+      r.thumbnail_url AS "thumbnailUrl",
+      r.servings,
+      r.cooking_time AS "cookingTime",
+      r.avg_rating AS "averageRating",
+      r.created_at AS "createdAt",
+      u.id AS "authorId",
+      u.full_name AS "authorFullName",
+      u.nickname AS "authorNickname",
+      u.avatar_url AS "authorAvatarUrl",
+      c.id AS "categoryId",
+      c.name AS "categoryName",
+      c.slug AS "categorySlug"
+    FROM recipes r
+    JOIN follows f ON f.following_id = r.author_id
+    JOIN users u ON u.id = r.author_id
+    LEFT JOIN categories c ON c.id = r.category_id
+    WHERE f.follower_id = ${followerId}
+    ORDER BY r.created_at DESC
+    LIMIT ${limit} OFFSET ${offset};
+  `;
+};
+
+// GET /api/v1/social/feed (hoặc /api/v1/social/news-feed)
+// Query params: page=1&limit=10&scope=following (hoặc all)
+export const getNewsFeed = async (req: AuthRequest, res: Response) => {
+  const currentUserId = req.user?.id;
+  if (!currentUserId) {
+    return res.status(401).json({
+      success: false,
+      errorCode: ErrorCodes.AUTH_TOKEN_MISSING,
+      message: 'Vui lòng đăng nhập để xem bảng tin News Feed.',
+    });
+  }
+
+  const page = Math.max(1, parseInt(String(req.query.page || '1'), 10) || 1);
+  const limit = Math.min(
+    50,
+    Math.max(1, parseInt(String(req.query.limit || '10'), 10) || 10),
+  );
+  const skip = (page - 1) * limit;
+  const scope = String(req.query.scope || 'following').toLowerCase();
+
+  // lấy danh sách ID các tác giả mà user hiện tại đang theo dõi
+  const followingList = await prisma.follow.findMany({
+    where: { followerId: currentUserId },
+    select: { followingId: true },
+  });
+
+  const followingIds = followingList.map((f) => f.followingId);
+
+  // xác định điều kiện WHERE
+  // Nếu scope=following mà chưa theo dõi ai, ta đánh dấu isFollowingEmpty=true
+  // và gợi ý các món mới nhất/phổ biến nhất của cộng đồng để không bị trống màn hình
+  const isFollowingEmpty = followingIds.length === 0;
+  let where: Prisma.RecipeWhereInput = {};
+
+  if (scope === 'following' && !isFollowingEmpty) {
+    where = { authorId: { in: followingIds } };
+  }
+
+  // truy vấn danh sách bài viết
+  const [recipes, total] = await Promise.all([
+    prisma.recipe.findMany({
+      where,
+      orderBy: { createdAt: 'desc' },
+      skip,
+      take: limit,
+      include: {
+        author: {
+          select: {
+            id: true,
+            nickname: true,
+            fullName: true,
+            avatarUrl: true,
+            bio: true,
+          },
+        },
+        category: {
+          select: {
+            id: true,
+            name: true,
+            slug: true,
+            iconUrl: true,
+          },
+        },
+        dietaryTags: {
+          include: {
+            dietaryRegime: {
+              select: { id: true, name: true, slug: true },
+            },
+          },
+        },
+        cooksnaps: {
+          take: 1,
+          orderBy: { createdAt: 'desc' },
+          select: {
+            id: true,
+            imageUrl: true,
+            caption: true,
+            user: {
+              select: { id: true, nickname: true, fullName: true, avatarUrl: true },
+            },
+          },
+        },
+        _count: {
+          select: {
+            reviews: true,
+            cooksnaps: true,
+            favoritedBy: true,
+          },
+        },
+      },
+    }),
+    prisma.recipe.count({ where }),
+  ]);
+
+  // batch query kiểm tra trạng thái yêu thích
+  let favoritedSet = new Set<string>();
+  if (recipes.length > 0) {
+    const favs = await prisma.favoriteRecipe.findMany({
+      where: {
+        userId: currentUserId,
+        recipeId: { in: recipes.map((r) => r.id) },
+      },
+      select: { recipeId: true },
+    });
+    favoritedSet = new Set(favs.map((f) => f.recipeId));
+  }
+
+  const totalPages = Math.ceil(total / limit);
+
+  return res.status(200).json({
+    success: true,
+    message:
+      isFollowingEmpty && scope === 'following'
+        ? 'Bạn chưa theo dõi đầu bếp nào. Dưới đây là gợi ý các món ăn mới nhất từ cộng đồng.'
+        : 'Lấy bảng tin News Feed thành công.',
+    data: {
+      isFollowingEmpty,
+      items: recipes.map((r) => ({
+        id: r.id,
+        title: r.title,
+        description: r.description,
+        thumbnailUrl: r.thumbnailUrl,
+        servings: r.servings,
+        cookingTime: r.cookingTime,
+        averageRating: r.averageRating,
+        isFavorited: favoritedSet.has(r.id),
+        author: r.author,
+        category: r.category,
+        dietaryTags: r.dietaryTags.map((t) => t.dietaryRegime),
+        stats: {
+          reviewsCount: r._count.reviews,
+          cooksnapsCount: r._count.cooksnaps,
+          favoritesCount: r._count.favoritedBy,
+        },
+        latestCooksnap: r.cooksnaps[0] ?? null,
+        createdAt: r.createdAt,
+      })),
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages,
+        hasNextPage: page < totalPages,
+        hasPrevPage: page > 1,
+      },
+    },
+  });
+};
+
 // ==================== FOLLOW ====================
 
 // POST /api/v1/social/users/:userId/follow

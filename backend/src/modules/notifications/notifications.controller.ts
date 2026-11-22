@@ -28,7 +28,7 @@ export const registerDeviceToken = async (req: AuthRequest, res: Response) => {
   const { token, platform } = parsed.data;
 
   // Upsert theo token: nếu máy đổi tài khoản thì chuyển quyền sở hữu token sang user mới
-  const saved = await prisma.deviceToken.upsert({
+  const saved = await prisma.userDevice.upsert({
     where: { token },
     update: { userId, platform },
     create: { userId, token, platform },
@@ -57,7 +57,7 @@ export const unregisterDeviceToken = async (
 
   const userId = req.user!.id;
 
-  await prisma.deviceToken.deleteMany({
+  await prisma.userDevice.deleteMany({
     where: { userId, token: parsed.data.token },
   });
 

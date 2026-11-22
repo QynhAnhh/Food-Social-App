@@ -22,7 +22,7 @@ export const notifyUser = async (payload: NotifyUserPayload): Promise<void> => {
       return;
     }
 
-    // 1. Lưu lịch sử thông báo vào DB
+    // lưu lịch sử thông báo vào DB
     const notification = await prisma.notification.create({
       data: {
         recipientId: payload.recipientId,
@@ -34,17 +34,17 @@ export const notifyUser = async (payload: NotifyUserPayload): Promise<void> => {
       },
     });
 
-    // 2. Lấy danh sách FCM token của người nhận
-    const deviceTokens = await prisma.deviceToken.findMany({
+    // lấy danh sách FCM token của người nhận
+    const deviceTokens = await prisma.userDevice.findMany({
       where: { userId: payload.recipientId },
       select: { token: true },
     });
 
-    if (deviceTokens.length === 0) return;
+    if (!deviceTokens || deviceTokens.length === 0) return;
 
     const tokens = deviceTokens.map((d) => d.token);
 
-    // 3. Gửi multicast qua Firebase Cloud Messaging
+    // gửi multicast qua Firebase Cloud Messaging
     const response = await firebaseMessaging.sendEachForMulticast({
       tokens,
       notification: {
@@ -65,7 +65,7 @@ export const notifyUser = async (payload: NotifyUserPayload): Promise<void> => {
       },
     });
 
-    // 4. Tự động xóa các FCM token đã chết / app bị gỡ cài đặt
+    // tự động xóa các FCM token đã chết / app bị gỡ cài đặt
     const invalidTokens: string[] = [];
     response.responses.forEach((resp, idx) => {
       if (!resp.success) {
@@ -80,7 +80,7 @@ export const notifyUser = async (payload: NotifyUserPayload): Promise<void> => {
     });
 
     if (invalidTokens.length > 0) {
-      await prisma.deviceToken.deleteMany({
+      await prisma.userDevice.deleteMany({
         where: { token: { in: invalidTokens } },
       });
     }
