@@ -55,7 +55,7 @@ export async function matchFridgeRecipes(
   userId: string,
   prismaClient: PrismaClient = defaultPrisma as any,
 ): Promise<MatchingResult> {
-  // 1. Lấy nguyên liệu trong tủ lạnh và danh sách dị ứng của người dùng
+  // lấy nguyên liệu trong tủ lạnh và danh sách dị ứng của người dùng
   const [fridgeItems, userAllergies] = await Promise.all([
     prismaClient.userFridgeItem.findMany({
       where: { userId },
@@ -72,16 +72,16 @@ export async function matchFridgeRecipes(
     };
   }
 
-  // 2. Lập bản đồ tra cứu khối lượng nguyên liệu trong tủ: ingredientId -> quantity
+  // lập bản đồ tra cứu khối lượng nguyên liệu trong tủ: ingredientId -> quantity
   const fridgeMap = new Map<number, number>(
     fridgeItems.map((item) => [item.ingredientId, item.quantity]),
   );
   const fridgeIngredientIds = Array.from(fridgeMap.keys());
 
-  // 3. Danh sách ID nguyên liệu gây dị ứng của người dùng
+  // danh sách ID nguyên liệu gây dị ứng của người dùng
   const allergyIngredientIds = userAllergies.map((a) => a.ingredientId);
 
-  // 4. Tìm các công thức có ít nhất 1 nguyên liệu trong tủ lạnh
+  // tìm các công thức có ít nhất 1 nguyên liệu trong tủ lạnh
   // và TUYỆT ĐỐI KHÔNG chứa bất kỳ nguyên liệu gây dị ứng nào
   const candidateRecipes = await prismaClient.recipe.findMany({
     where: {
@@ -118,7 +118,7 @@ export async function matchFridgeRecipes(
     },
   });
 
-  // 5. Tính toán tỷ lệ khớp (%) và bóc tách danh sách nguyên liệu đủ / thiếu
+  // tính toán tỷ lệ khớp (%) và bóc tách danh sách nguyên liệu đủ / thiếu
   const scoredRecipes: ScoredRecipe[] = candidateRecipes.map((recipe: any) => {
     const totalIngredients = recipe.ingredients.length;
     const matchedIngredients: MatchedIngredient[] = [];
@@ -168,10 +168,10 @@ export async function matchFridgeRecipes(
     };
   });
 
-  // 6. Sắp xếp kết quả theo thứ tự ưu tiên:
-  // - 1. Tỷ lệ nguyên liệu khớp giảm dần (Match % desc)
-  // - 2. Số nguyên liệu còn thiếu tăng dần (Missing count asc)
-  // - 3. Điểm đánh giá trung bình giảm dần (Rating desc)
+  // sắp xếp kết quả theo thứ tự ưu tiên:
+  // - tỷ lệ nguyên liệu khớp giảm dần (Match % desc)
+  // - số nguyên liệu còn thiếu tăng dần (Missing count asc)
+  // - điểm đánh giá trung bình giảm dần (Rating desc)
   scoredRecipes.sort((a, b) => {
     if (b.matchPercentage !== a.matchPercentage) {
       return b.matchPercentage - a.matchPercentage;

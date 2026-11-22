@@ -12,21 +12,21 @@ import {
 
 export const usersRouter = Router();
 
-// 1. Kiểm tra nickname
+// kiểm tra nickname
 usersRouter.get(
   '/check-nickname',
   authenticate,
   asyncHandler(checkNickname),
 );
 
-// 2. Cập nhật hồ sơ
+// cập nhật hồ sơ
 usersRouter.put(
   '/profile',
   authenticate,
   asyncHandler(updateProfile),
 );
 
-// 3. Upload ảnh đại diện
+// upload ảnh đại diện
 usersRouter.post(
   '/avatar',
   authenticate,

@@ -18,7 +18,7 @@ export const getRecipes = async (req: AuthRequest, res: Response) => {
   try {
     const currentUserId = req.user?.id;
 
-    // 1. Phân trang
+    // phân trang
     const page = Math.max(1, parseInt(String(req.query.page || '1'), 10) || 1);
     const limit = Math.min(
       50,
@@ -26,7 +26,7 @@ export const getRecipes = async (req: AuthRequest, res: Response) => {
     );
     const skip = (page - 1) * limit;
 
-    // 2. Lấy bộ lọc mặc định của user (nếu đã đăng nhập & không tắt bằng useDefaultFilter=false)
+    // lấy bộ lọc mặc định của user (nếu đã đăng nhập & không tắt bằng useDefaultFilter=false)
     const shouldApplyDefault =
       Boolean(currentUserId) && String(req.query.useDefaultFilter) !== 'false';
 
@@ -36,7 +36,7 @@ export const getRecipes = async (req: AuthRequest, res: Response) => {
         })
       : null;
 
-    // 3. Hợp nhất tham số URL (ưu tiên hơn) với bộ lọc mặc định
+    // hợp nhất tham số URL (ưu tiên hơn) với bộ lọc mặc định
     const searchKeyword = String(req.query.q ?? req.query.search ?? '').trim();
 
     const queryCategoryId =
@@ -78,7 +78,7 @@ export const getRecipes = async (req: AuthRequest, res: Response) => {
       req.query.sortBy ?? defaultFilter?.sortBy ?? 'newest',
     );
 
-    // 4. Xây dựng điều kiện WHERE
+    // xây dựng điều kiện WHERE
     const where: Prisma.RecipeWhereInput = {};
 
     if (searchKeyword) {
@@ -127,7 +127,7 @@ export const getRecipes = async (req: AuthRequest, res: Response) => {
       }
     }
 
-    // 5. Sắp xếp
+    // sắp xếp
     let orderBy: Prisma.RecipeOrderByWithRelationInput = { createdAt: 'desc' };
     if (sortBy === 'rating') {
       orderBy = { averageRating: 'desc' };
@@ -135,7 +135,7 @@ export const getRecipes = async (req: AuthRequest, res: Response) => {
       orderBy = { cookingTime: 'asc' };
     }
 
-    // 6. Query song song danh sách + tổng số bản ghi
+    // query song song danh sách + tổng số bản ghi
     const [recipes, total] = await Promise.all([
       prisma.recipe.findMany({
         where,

@@ -87,11 +87,75 @@ export const prismaMock = {
     delete: jest.fn(),
     deleteMany: jest.fn(),
   },
+  userDevice: {
+    findMany: jest.fn(),
+    findUnique: jest.fn(),
+    findFirst: jest.fn(),
+    create: jest.fn(),
+    upsert: jest.fn(),
+    update: jest.fn(),
+    delete: jest.fn(),
+    deleteMany: jest.fn(),
+  },
+  deviceToken: {
+    findMany: jest.fn(),
+    findUnique: jest.fn(),
+    findFirst: jest.fn(),
+    create: jest.fn(),
+    upsert: jest.fn(),
+    update: jest.fn(),
+    delete: jest.fn(),
+    deleteMany: jest.fn(),
+  },
+  follow: {
+    findUnique: jest.fn(),
+    findFirst: jest.fn(),
+    findMany: jest.fn(),
+    create: jest.fn(),
+    delete: jest.fn(),
+    deleteMany: jest.fn(),
+    count: jest.fn(),
+  },
+  review: {
+    findUnique: jest.fn(),
+    findFirst: jest.fn(),
+    findMany: jest.fn(),
+    create: jest.fn(),
+    update: jest.fn(),
+    delete: jest.fn(),
+    deleteMany: jest.fn(),
+    count: jest.fn(),
+    aggregate: jest.fn(),
+  },
+  cooksnap: {
+    findUnique: jest.fn(),
+    findFirst: jest.fn(),
+    findMany: jest.fn(),
+    create: jest.fn(),
+    delete: jest.fn(),
+    deleteMany: jest.fn(),
+    count: jest.fn(),
+  },
+  notification: {
+    findUnique: jest.fn(),
+    findFirst: jest.fn(),
+    findMany: jest.fn(),
+    create: jest.fn(),
+    update: jest.fn(),
+    updateMany: jest.fn(),
+    delete: jest.fn(),
+    deleteMany: jest.fn(),
+    count: jest.fn(),
+  },
   $transaction: jest.fn((callback: any) => callback(prismaMock)),
 };
 
 export const firebaseAuthMock = {
   verifyIdToken: jest.fn(),
+};
+
+export const firebaseMessagingMock = {
+  sendEachForMulticast: jest.fn().mockResolvedValue({ responses: [] }),
 };
 
 export const fileSaveMock = jest.fn().mockResolvedValue(undefined);
@@ -109,6 +173,7 @@ jest.mock('../src/config/prisma', () => ({
 jest.mock('../src/config/firebase', () => ({
   firebaseAuth: firebaseAuthMock,
   firebaseBucket: firebaseBucketMock,
+  firebaseMessaging: firebaseMessagingMock,
 }));
 
 beforeEach(() => {
@@ -127,4 +192,6 @@ beforeEach(() => {
     fullName: 'Minh Nhất',
     role: 'USER',
   });
+  prismaMock.userDevice.findMany.mockResolvedValue([]);
+  prismaMock.notification.create.mockResolvedValue({ id: 'mock-notif-id' });
 });

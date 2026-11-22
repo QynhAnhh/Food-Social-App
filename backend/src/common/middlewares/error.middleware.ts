@@ -15,7 +15,7 @@ export const errorHandler: ErrorRequestHandler = (
   res: Response,
   _next: NextFunction,
 ) => {
-  // 1. Zod validation errors
+  // zod validation errors
   if (err instanceof ZodError) {
     const details = err.errors.map((e) => ({
       field: e.path.join('.'),
@@ -31,7 +31,7 @@ export const errorHandler: ErrorRequestHandler = (
     });
   }
 
-  // 2. Application errors
+  // application errors
   if (err instanceof AppError) {
     if (err.statusCode >= 500) {
       console.error('Unhandled Server Error:', err);
@@ -46,7 +46,7 @@ export const errorHandler: ErrorRequestHandler = (
     });
   }
 
-  // 3. Prisma known request errors
+  // prisma known request errors
   if (err instanceof Prisma.PrismaClientKnownRequestError) {
     let statusCode = 500;
     let message = 'Đã có lỗi xảy ra trên hệ thống.';
@@ -81,7 +81,7 @@ export const errorHandler: ErrorRequestHandler = (
     });
   }
 
-  // 4. Unknown errors
+  // unknown errors
   console.error('Unhandled Server Error:', err);
 
   return res.status(500).json({
