@@ -7,7 +7,6 @@ import {
   updateRecipeTransaction,
   RecipeTransactionError,
 } from './recipe.transaction';
-import { filterRecipesQuery } from './recipe.filter';
 import {
   toggleFavoriteRecipe,
   checkFavoriteStatus,
