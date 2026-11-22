@@ -23,6 +23,27 @@ recipesRouter.get(
   asyncHandler(getRecipes),
 );
 
+// Danh sách công thức yêu thích của tôi (phải đặt trước /:id)
+recipesRouter.get(
+  '/favorites/my',
+  authenticate,
+  asyncHandler(getMyFavoriteRecipes),
+);
+
+// Thả tim / Hủy thả tim công thức
+recipesRouter.post(
+  '/:id/favorite',
+  authenticate,
+  asyncHandler(toggleFavorite),
+);
+
+// Kiểm tra trạng thái đã thả tim
+recipesRouter.get(
+  '/:id/favorite',
+  authenticate,
+  asyncHandler(getFavoriteStatus),
+);
+
 recipesRouter.get(
   '/:id',
   optionalAuthenticate,

@@ -136,8 +136,8 @@ model Recipe {
   dietaryTags         RecipeDietaryTag[]
   favoritedBy         FavoriteRecipe[]
   reviews             Review[]
-  cooksnaps           Cooksnap[]
-  shoppingListSources ShoppingListRecipeSource[]
+  cooksnaps         Cooksnap[]
+  shoppingListItems ShoppingListItem[]
 
   @@map("recipes")
 }
