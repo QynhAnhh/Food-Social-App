@@ -7,7 +7,6 @@ import {
   updateRecipeTransaction,
   RecipeTransactionError,
 } from './recipe.transaction';
-import { filterRecipesQuery } from './recipe.filter';
 import {
   toggleFavoriteRecipe,
   checkFavoriteStatus,
@@ -442,4 +441,55 @@ export const updateRecipe = async (req: AuthRequest, res: Response) => {
       message: 'Đã có lỗi xảy ra khi cập nhật công thức.',
     });
   }
+};
+
+/**
+ * POST /api/v1/recipes/:id/favorite
+ * Thả tim / Hủy thả tim công thức
+ */
+export const toggleFavorite = async (req: AuthRequest, res: Response) => {
+  const recipeId = String(req.params.id);
+  const userId = req.user!.id;
+
+  const result = await toggleFavoriteRecipe(userId, recipeId);
+
+  return res.status(200).json({
+    success: true,
+    message: result.message,
+    data: result,
+  });
+};
+
+/**
+ * GET /api/v1/recipes/:id/favorite
+ * Kiểm tra trạng thái đã thả tim của người dùng hiện tại
+ */
+export const getFavoriteStatus = async (req: AuthRequest, res: Response) => {
+  const recipeId = String(req.params.id);
+  const userId = req.user!.id;
+
+  const result = await checkFavoriteStatus(userId, recipeId);
+
+  return res.status(200).json({
+    success: true,
+    data: result,
+  });
+};
+
+/**
+ * GET /api/v1/recipes/favorites/my
+ * Lấy danh sách toàn bộ công thức người dùng đã lưu yêu thích
+ */
+export const getMyFavoriteRecipes = async (req: AuthRequest, res: Response) => {
+  const userId = req.user!.id;
+  const page = req.query.page ? Number(req.query.page) : 1;
+  const limit = req.query.limit ? Number(req.query.limit) : 10;
+
+  const result = await getUserFavoriteRecipes(userId, { page, limit });
+
+  return res.status(200).json({
+    success: true,
+    message: 'Lấy danh sách công thức yêu thích thành công.',
+    data: result,
+  });
 };
