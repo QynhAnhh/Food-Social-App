@@ -7,6 +7,12 @@ import {
   updateRecipeTransaction,
   RecipeTransactionError,
 } from './recipe.transaction';
+import { filterRecipesQuery } from './recipe.filter';
+import {
+  toggleFavoriteRecipe,
+  checkFavoriteStatus,
+  getUserFavoriteRecipes,
+} from './recipe.favorite';
 import { ErrorCodes } from '../../common/errors';
 
 export const getRecipeById = async (
@@ -16,7 +22,7 @@ export const getRecipeById = async (
   const recipeId = String(req.params.id);
   const currentUserId = req.user?.id;
 
-  // Lấy thông tin chi tiết công thức
+  // lấy thông tin chi tiết công thức
   const recipe = await prisma.recipe.findUnique({
     where: { id: recipeId },
     include: {
@@ -75,7 +81,7 @@ export const getRecipeById = async (
     },
   });
 
-  // Kiểm tra công thức có tồn tại không
+  // kiểm tra công thức có tồn tại không
   if (!recipe) {
     return res.status(404).json({
       success: false,
@@ -84,7 +90,7 @@ export const getRecipeById = async (
     });
   }
 
-  // Kiểm tra người dùng đã yêu thích công thức chưa
+  // kiểm tra người dùng đã yêu thích công thức chưa
   let isFavorited = false;
 
   if (currentUserId) {
@@ -100,7 +106,7 @@ export const getRecipeById = async (
     isFavorited = !!fav;
   }
 
-  // Trả kết quả chi tiết công thức
+  // trả kết quả chi tiết công thức
   return res.status(200).json({
     success: true,
     message: 'Lấy chi tiết công thức thành công.',
@@ -173,7 +179,7 @@ export const createRecipe = async (req: AuthRequest, res: Response) => {
       });
     }
 
-    console.error('Create recipe transaction error:', error);
+    console.error('Loi tao cong thuc mon an:', error);
     return res.status(500).json({
       success: false,
       errorCode: ErrorCodes.INTERNAL_SERVER_ERROR,
@@ -206,7 +212,7 @@ export const updateRecipe = async (req: AuthRequest, res: Response) => {
       });
     }
 
-    console.error('Update recipe transaction error:', error);
+    console.error('Loi cap nhat cong thuc mon an:', error);
     return res.status(500).json({
       success: false,
       errorCode: ErrorCodes.INTERNAL_SERVER_ERROR,
@@ -214,4 +220,135 @@ export const updateRecipe = async (req: AuthRequest, res: Response) => {
     });
   }
 };
+
+/**
+ * GET /api/v1/recipes
+ * bộ lọc đa tầng (danh mục, chế độ ăn, thời gian nấu, tìm kiếm từ khóa) kết hợp loại trừ dị ứng
+ */
+export const getRecipes = async (req: AuthRequest, res: Response) => {
+  try {
+    const userId = req.user?.id;
+    const categoryId = req.query.categoryId ? Number(req.query.categoryId) : undefined;
+    const categorySlug = req.query.categorySlug ? String(req.query.categorySlug) : undefined;
+    const dietaryRegimeId = req.query.dietaryRegimeId ? Number(req.query.dietaryRegimeId) : undefined;
+    const dietaryRegimeSlug = req.query.dietaryRegimeSlug ? String(req.query.dietaryRegimeSlug) : undefined;
+    const maxCookingTime = req.query.maxCookingTime ? Number(req.query.maxCookingTime) : undefined;
+    const minRating = req.query.minRating ? Number(req.query.minRating) : undefined;
+    const search = req.query.search ? String(req.query.search) : undefined;
+    const excludeAllergies = req.query.excludeAllergies !== undefined
+      ? req.query.excludeAllergies !== 'false'
+      : true;
+    const sortBy = (req.query.sortBy as any) || 'newest';
+    const sortDirection = (req.query.sortDirection as any) || undefined;
+    const page = req.query.page ? Number(req.query.page) : 1;
+    const limit = req.query.limit ? Number(req.query.limit) : 10;
+
+    const result = await filterRecipesQuery({
+      userId,
+      categoryId,
+      categorySlug,
+      dietaryRegimeId,
+      dietaryRegimeSlug,
+      maxCookingTime,
+      minRating,
+      search,
+      excludeAllergies,
+      sortBy,
+      sortDirection,
+      page,
+      limit,
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: 'Lấy danh sách công thức thành công.',
+      ...result,
+    });
+  } catch (error: any) {
+    console.error('Loi loc cong thuc mon an:', error);
+    return res.status(error.statusCode || 500).json({
+      success: false,
+      errorCode: error.errorCode || ErrorCodes.INTERNAL_SERVER_ERROR,
+      message: error.message || 'Đã có lỗi xảy ra khi truy vấn công thức.',
+    });
+  }
+};
+
+/**
+ * POST /api/v1/recipes/:id/favorite
+ * thả tim / hủy thả tim công thức
+ */
+export const toggleFavorite = async (req: AuthRequest, res: Response) => {
+  try {
+    const recipeId = String(req.params.id);
+    const userId = req.user!.id;
+
+    const result = await toggleFavoriteRecipe(userId, recipeId);
+
+    return res.status(200).json({
+      success: true,
+      ...result,
+    });
+  } catch (error: any) {
+    console.error('Loi tha tim / bo tim cong thuc:', error);
+    return res.status(error.statusCode || 500).json({
+      success: false,
+      errorCode: error.errorCode || ErrorCodes.INTERNAL_SERVER_ERROR,
+      message: error.message || 'Đã có lỗi xảy ra khi cập nhật yêu thích.',
+    });
+  }
+};
+
+/**
+ * GET /api/v1/recipes/:id/favorite
+ * kiểm tra trạng thái đã thả tim của người dùng hiện tại
+ */
+export const getFavoriteStatus = async (req: AuthRequest, res: Response) => {
+  try {
+    const recipeId = String(req.params.id);
+    const userId = req.user!.id;
+
+    const result = await checkFavoriteStatus(userId, recipeId);
+
+    return res.status(200).json({
+      success: true,
+      data: result,
+    });
+  } catch (error: any) {
+    console.error('Loi kiem tra trang thai tha tim:', error);
+    return res.status(error.statusCode || 500).json({
+      success: false,
+      errorCode: error.errorCode || ErrorCodes.INTERNAL_SERVER_ERROR,
+      message: error.message || 'Đã có lỗi xảy ra khi kiểm tra trạng thái yêu thích.',
+    });
+  }
+};
+
+/**
+ * GET /api/v1/recipes/favorites/my
+ * lấy danh sách toàn bộ công thức người dùng đã lưu yêu thích
+ */
+export const getMyFavoriteRecipes = async (req: AuthRequest, res: Response) => {
+  try {
+    const userId = req.user!.id;
+    const page = req.query.page ? Number(req.query.page) : 1;
+    const limit = req.query.limit ? Number(req.query.limit) : 10;
+
+    const result = await getUserFavoriteRecipes(userId, { page, limit });
+
+    return res.status(200).json({
+      success: true,
+      message: 'Lấy danh sách công thức yêu thích thành công.',
+      ...result,
+    });
+  } catch (error: any) {
+    console.error('Loi lay danh sach cong thuc yeu thich:', error);
+    return res.status(error.statusCode || 500).json({
+      success: false,
+      errorCode: error.errorCode || ErrorCodes.INTERNAL_SERVER_ERROR,
+      message: error.message || 'Đã có lỗi xảy ra khi lấy danh sách yêu thích.',
+    });
+  }
+};
+
 
