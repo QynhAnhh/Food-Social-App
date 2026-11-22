@@ -33,22 +33,25 @@ model User {
   createdAt   DateTime @default(now()) @map("created_at")
   updatedAt   DateTime @updatedAt @map("updated_at")
 
-  recipes         Recipe[]
-  allergies       UserAllergy[]
-  fridgeItems     UserFridgeItem[]
-  favoriteRecipes FavoriteRecipe[]
-  reviews         Review[]
-  cooksnaps       Cooksnap[]
+  recipes           Recipe[]
+  allergies         UserAllergy[]
+  fridgeItems       UserFridgeItem[]
+  favoriteRecipes   FavoriteRecipe[]
+  reviews           Review[]
+  cooksnaps         Cooksnap[]
+  savedFilters      SavedFilter[]
+  shoppingListItems ShoppingListItem[]
 
   @@map("users")
 }
 
 model Category {
-  id      Int      @id @default(autoincrement())
-  name    String   @unique
-  slug    String   @unique
-  iconUrl String?  @map("icon_url")
-  recipes Recipe[]
+  id           Int           @id @default(autoincrement())
+  name         String        @unique
+  slug         String        @unique
+  iconUrl      String?       @map("icon_url")
+  recipes      Recipe[]
+  savedFilters SavedFilter[]
 
   @@map("categories")
 }
@@ -73,6 +76,7 @@ model Ingredient {
   recipeIngredients RecipeIngredient[]
   userAllergies     UserAllergy[]
   fridgeItems       UserFridgeItem[]
+  shoppingListItems ShoppingListItem[]
 
   @@map("ingredients")
 }
@@ -88,12 +92,12 @@ model UserAllergy {
 }
 
 model UserFridgeItem {
-  id           String     @id @default(uuid())
-  userId       String     @map("user_id")
-  ingredientId Int        @map("ingredient_id")
-  quantity     Float      // Khối lượng hiện có theo đơn vị chuẩn của Ingredient
-  expiryDate   DateTime?  @map("expiry_date")
-  updatedAt    DateTime   @updatedAt @map("updated_at")
+  id           String    @id @default(uuid())
+  userId       String    @map("user_id")
+  ingredientId Int       @map("ingredient_id")
+  quantity     Float // Khối lượng hiện có theo đơn vị chuẩn của Ingredient
+  expiryDate   DateTime? @map("expiry_date")
+  updatedAt    DateTime  @updatedAt @map("updated_at")
 
   user       User       @relation(fields: [userId], references: [id], onDelete: Cascade)
   ingredient Ingredient @relation(fields: [ingredientId], references: [id], onDelete: Cascade)
@@ -115,14 +119,15 @@ model Recipe {
   createdAt     DateTime @default(now()) @map("created_at")
   updatedAt     DateTime @updatedAt @map("updated_at")
 
-  author      User               @relation(fields: [authorId], references: [id], onDelete: Cascade)
-  category    Category           @relation(fields: [categoryId], references: [id])
-  steps       RecipeStep[]
-  ingredients RecipeIngredient[]
-  dietaryTags RecipeDietaryTag[]
-  favoritedBy FavoriteRecipe[]
-  reviews     Review[]
-  cooksnaps   Cooksnap[]
+  author              User                       @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  category            Category                   @relation(fields: [categoryId], references: [id])
+  steps               RecipeStep[]
+  ingredients         RecipeIngredient[]
+  dietaryTags         RecipeDietaryTag[]
+  favoritedBy         FavoriteRecipe[]
+  reviews             Review[]
+  cooksnaps           Cooksnap[]
+  shoppingListSources ShoppingListRecipeSource[]
 
   @@map("recipes")
 }
@@ -203,4 +208,52 @@ model Cooksnap {
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("cooksnaps")
+}
+
+// 14. Bảng saved_filters (Bộ lọc cá nhân đã lưu - Bảng số 4 trong tài liệu)
+model SavedFilter {
+  id                    String   @id @default(uuid())
+  userId                String   @map("user_id")
+  filterName            String   @map("filter_name")
+  categoryId            Int?     @map("category_id")
+  dietaryIds            Int[]    @default([]) @map("dietary_ids")
+  excludedIngredientIds Int[]    @default([]) @map("excluded_ingredient_ids")
+  maxCookingTime        Int?     @map("max_cooking_time") // Phút (NULL nếu không giới hạn)
+  isDefault             Boolean  @default(false) @map("is_default")
+  createdAt             DateTime @default(now()) @map("created_at")
+
+  user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  category Category? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+
+  @@map("saved_filters")
+}
+
+// 15. Bảng shopping_list_items (Danh sách đi chợ - Bảng số 12 trong tài liệu)
+model ShoppingListItem {
+  id            String   @id @default(uuid())
+  userId        String   @map("user_id")
+  ingredientId  Int      @map("ingredient_id")
+  totalQuantity Float    @map("total_quantity") // DECIMAL(10,2) cộng dồn tự động
+  isPurchased   Boolean  @default(false) @map("is_purchased")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  user          User                       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  ingredient    Ingredient                 @relation(fields: [ingredientId], references: [id], onDelete: Cascade)
+  recipeSources ShoppingListRecipeSource[]
+
+  @@unique([userId, ingredientId])
+  @@map("shopping_list_items")
+}
+
+// 16. Bảng shopping_list_recipe_sources (Truy vết nguồn công thức - Bảng số 13 trong tài liệu)
+model ShoppingListRecipeSource {
+  shoppingItemId String @map("shopping_item_id")
+  recipeId       String @map("recipe_id")
+  addedQuantity  Float  @map("added_quantity") // DECIMAL(10,2)
+
+  shoppingItem ShoppingListItem @relation(fields: [shoppingItemId], references: [id], onDelete: Cascade)
+  recipe       Recipe           @relation(fields: [recipeId], references: [id], onDelete: Cascade)
+
+  @@id([shoppingItemId, recipeId])
+  @@map("shopping_list_recipe_sources")
 }
