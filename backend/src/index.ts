@@ -6,6 +6,6 @@ import { app } from './app';
 const PORT = process.env.PORT || 5000;
 
 app.listen(PORT, () => {
-  console.log(`Food Social API server is running on http://localhost:${PORT}`);
+  console.log(`May chu Food Social API dang chay tai http://localhost:${PORT}`);
 });
 

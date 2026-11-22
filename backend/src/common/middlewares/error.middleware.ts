@@ -30,6 +30,16 @@ export const errorHandler: ErrorRequestHandler = (
   }
 
   // 2. Bắt lỗi nghiệp vụ AppError (và các lớp con)
+  if (err instanceof AppError) {
+    return res.status(err.statusCode).json({
+      success: false,
+      errorCode: err.errorCode,
+      message: err.message,
+      details: err.details,
+      timestamp: new Date().toISOString(),
+    });
+  }
+
   const statusCode = err.statusCode || 500;
   const errorCode = err.errorCode || ErrorCodes.INTERNAL_SERVER_ERROR;
   const message = err.message || 'Đã có lỗi xảy ra trên hệ thống.';
@@ -37,7 +47,7 @@ export const errorHandler: ErrorRequestHandler = (
 
   // Ghi log nếu là lỗi máy chủ nghiêm trọng (500)
   if (statusCode >= 500) {
-    console.error('Unhandled Server Error:', err);
+    console.error('Loi he thong chua duoc xu ly:', err);
   }
 
   return res.status(statusCode).json({

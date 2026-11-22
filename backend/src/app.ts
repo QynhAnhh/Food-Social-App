@@ -6,6 +6,8 @@ import { authRouter } from './modules/auth/auth.routes';
 import { usersRouter } from './modules/users/users.routes';
 import { fridgeRouter } from './modules/fridge/fridge.routes';
 import { recipesRouter } from './modules/recipes/recipes.routes';
+import { shoppingListRouter } from './modules/shopping-list/shopping-list.routes';
+import { searchRouter } from './modules/search/search.routes';
 import { errorHandler } from './common/middlewares/error.middleware';
 
 export const app = express();
@@ -35,6 +37,8 @@ app.use(`${API_PREFIX}/auth`, authRouter);
 app.use(`${API_PREFIX}/users`, usersRouter);
 app.use(`${API_PREFIX}/fridge`, fridgeRouter);
 app.use(`${API_PREFIX}/recipes`, recipesRouter);
+app.use(`${API_PREFIX}/shopping-list`, shoppingListRouter);
+app.use(`${API_PREFIX}/search`, searchRouter);
 
 // ================= 404 HANDLER =================
 
