@@ -1,9 +1,8 @@
 /**
- * Danh mục Mã Lỗi Toàn Hệ Thống (Food Social App)
- * Tuân thủ theo tài liệu: docs/conventions/error-handling-codes.md
+ * Danh mục Mã Lỗi Toàn Hệ Thống
  */
 export const ErrorCodes = {
-  // 1. Nhóm Xác thực & Ủy quyền (Auth & Security - 401, 403)
+  // nhóm xác thực & ủy quyền (auth & security - 401, 403)
   AUTH_TOKEN_MISSING: 'AUTH_TOKEN_MISSING',
   AUTH_TOKEN_INVALID: 'AUTH_TOKEN_INVALID',
   AUTH_INVALID_TOKEN: 'AUTH_INVALID_TOKEN',
@@ -15,7 +14,7 @@ export const ErrorCodes = {
   FORBIDDEN_RESOURCE: 'FORBIDDEN_RESOURCE',
   ACCOUNT_DEACTIVATED: 'ACCOUNT_DEACTIVATED',
 
-  // 2. Nhóm Người dùng & Hồ sơ (Users & Profile - 400, 404, 409)
+  // nhóm người dùng & hồ sơ (users & profile - 400, 404, 409)
   USER_NOT_FOUND: 'USER_NOT_FOUND',
   DUPLICATE_NICKNAME: 'DUPLICATE_NICKNAME',
   USER_NICKNAME_TAKEN: 'USER_NICKNAME_TAKEN',
@@ -25,7 +24,7 @@ export const ErrorCodes = {
   FILE_REQUIRED: 'FILE_REQUIRED',
   INVALID_FILE_TYPE: 'INVALID_FILE_TYPE',
 
-  // 3. Nhóm Công thức & Danh mục (Recipes & Categories - 400, 403, 404)
+  // nhóm công thức & danh mục (recipes & categories - 400, 403, 404)
   RECIPE_NOT_FOUND: 'RECIPE_NOT_FOUND',
   NOT_RECIPE_OWNER: 'NOT_RECIPE_OWNER',
   RECIPE_MISSING_INGREDIENTS: 'RECIPE_MISSING_INGREDIENTS',
@@ -36,13 +35,13 @@ export const ErrorCodes = {
   INGREDIENT_NOT_FOUND: 'INGREDIENT_NOT_FOUND',
   DIETARY_REGIME_NOT_FOUND: 'DIETARY_REGIME_NOT_FOUND',
 
-  // 4. Nhóm Tiện ích (Fridge & Shopping List & Search Filters - 400, 404)
+  // nhóm tiện ích (fridge & shopping list & search filters - 400, 404)
   EMPTY_FRIDGE_QUERY: 'EMPTY_FRIDGE_QUERY',
   FRIDGE_ITEM_NOT_FOUND: 'FRIDGE_ITEM_NOT_FOUND',
   SHOPPING_ITEM_NOT_FOUND: 'SHOPPING_ITEM_NOT_FOUND',
   SAVED_FILTER_NOT_FOUND: 'SAVED_FILTER_NOT_FOUND',
 
-  // 5. Nhóm Tương tác Cộng đồng (Social & Reviews - 400, 404, 409)
+  // nhóm tương tác cộng đồng (social & reviews - 400, 404, 409)
   CANNOT_FOLLOW_SELF: 'CANNOT_FOLLOW_SELF',
   ALREADY_FOLLOWING: 'ALREADY_FOLLOWING',
   NOT_FOLLOWING: 'NOT_FOLLOWING',
@@ -52,7 +51,7 @@ export const ErrorCodes = {
   INVALID_RATING_SCORE: 'INVALID_RATING_SCORE',
   NOTIFICATION_NOT_FOUND: 'NOTIFICATION_NOT_FOUND',
 
-  // 6. Nhóm Dữ liệu & Hệ thống (Validation & System - 400, 422, 429, 500)
+  // nhóm dữ liệu & hệ thống (validation & system - 400, 422, 429, 500)
   INVALID_INPUT: 'INVALID_INPUT',
   VALIDATION_ERROR: 'VALIDATION_ERROR',
   RATE_LIMIT_EXCEEDED: 'RATE_LIMIT_EXCEEDED',

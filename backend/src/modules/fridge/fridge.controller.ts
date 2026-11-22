@@ -17,7 +17,7 @@ const updateFridgeItemSchema = z.object({
   expiryDate: z.string().datetime().nullable().optional(),
 });
 
-// 1. GET /api/v1/fridge/items
+// get /api/v1/fridge/items
 // Lấy danh sách nguyên liệu trong tủ lạnh
 export const getFridgeItems = async (
   req: AuthRequest,
@@ -45,7 +45,7 @@ export const getFridgeItems = async (
   });
 };
 
-// 2. POST /api/v1/fridge/items
+// post /api/v1/fridge/items
 // Thêm hoặc cập nhật nguyên liệu trong tủ lạnh
 export const addFridgeItem = async (
   req: AuthRequest,
@@ -95,7 +95,7 @@ export const addFridgeItem = async (
   });
 };
 
-// 3. PUT /api/v1/fridge/items/:id
+// put /api/v1/fridge/items/:id
 // Sửa định lượng và hạn sử dụng nguyên liệu
 export const updateFridgeItem = async (
   req: AuthRequest,
@@ -155,7 +155,7 @@ export const updateFridgeItem = async (
   });
 };
 
-// 4. DELETE /api/v1/fridge/items/:id
+// delete /api/v1/fridge/items/:id
 // Xóa nguyên liệu khỏi tủ lạnh
 export const deleteFridgeItem = async (
   req: AuthRequest,
@@ -185,7 +185,7 @@ export const deleteFridgeItem = async (
   });
 };
 
-// 5. GET /api/v1/fridge/recommendations
+// get /api/v1/fridge/recommendations
 // Gợi ý công thức từ nguyên liệu trong tủ lạnh (Task FSA-23)
 export const getFridgeRecommendations = async (
   req: AuthRequest,

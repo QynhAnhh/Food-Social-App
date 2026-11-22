@@ -40,7 +40,7 @@ const updateProfileSchema = z.object({
     .optional(),
 });
 
-// 1. GET /api/v1/users/check-nickname?nickname=chef_nhat
+// get /api/v1/users/check-nickname?nickname=chef_nhat
 export const checkNickname = async (
   req: AuthRequest,
   res: Response,
@@ -79,7 +79,7 @@ export const checkNickname = async (
   });
 };
 
-// 2. PUT /api/v1/users/profile
+// put /api/v1/users/profile
 export const updateProfile = async (
   req: AuthRequest,
   res: Response,
@@ -177,7 +177,7 @@ export const updateProfile = async (
   });
 };
 
-// 3. POST /api/v1/users/avatar
+// post /api/v1/users/avatar
 // Multipart Form-Data: field "avatar"
 export const uploadAvatar = async (
   req: AuthRequest,

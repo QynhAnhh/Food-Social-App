@@ -14,6 +14,7 @@ import {
   getFavoriteStatus,
   getMyFavoriteRecipes,
 } from './recipes.controller';
+import { getNewsFeed } from '../social/social.controller';
 
 export const recipesRouter = Router();
 
@@ -21,6 +22,13 @@ recipesRouter.get(
   '/',
   optionalAuthenticate,
   asyncHandler(getRecipes),
+);
+
+// Bảng tin News Feed từ các đầu bếp đang theo dõi (phải đặt trước /:id)
+recipesRouter.get(
+  '/feed',
+  authenticate,
+  asyncHandler(getNewsFeed),
 );
 
 // Danh sách công thức yêu thích của tôi (phải đặt trước /:id)
