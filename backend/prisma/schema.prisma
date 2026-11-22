@@ -48,7 +48,7 @@ model User {
   shoppingListItems     ShoppingListItem[]
   followers             Follow[]           @relation("UserFollowers")
   following             Follow[]           @relation("UserFollowing")
-  deviceTokens          DeviceToken[]
+  devices               UserDevice[]
   receivedNotifications Notification[]     @relation("NotificationRecipient")
   sentNotifications     Notification[]     @relation("NotificationActor")
 
@@ -123,21 +123,24 @@ model Recipe {
   title         String
   description   String?
   thumbnailUrl  String   @map("thumbnail_url")
-  servings      Int      @default(2)
-  cookingTime   Int      @map("cooking_time")
-  averageRating Float    @default(0) @map("average_rating")
-  createdAt     DateTime @default(now()) @map("created_at")
-  updatedAt     DateTime @updatedAt @map("updated_at")
+  servings      Int          @default(2)
+  cookingTime   Int          @map("cooking_time")
+  averageRating Float        @default(0) @map("avg_rating")
+  ratingCount   Int          @default(0) @map("rating_count")
+  status        RecipeStatus @default(PUBLISHED) @map("status")
+  createdAt     DateTime     @default(now()) @map("created_at")
+  updatedAt     DateTime     @updatedAt @map("updated_at")
 
-  author              User                       @relation(fields: [authorId], references: [id], onDelete: Cascade)
-  category            Category                   @relation(fields: [categoryId], references: [id])
-  steps               RecipeStep[]
-  ingredients         RecipeIngredient[]
-  dietaryTags         RecipeDietaryTag[]
-  favoritedBy         FavoriteRecipe[]
-  reviews             Review[]
-  cooksnaps         Cooksnap[]
-  shoppingListItems ShoppingListItem[]
+  author                    User                       @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  category                  Category                   @relation(fields: [categoryId], references: [id])
+  steps                     RecipeStep[]
+  ingredients               RecipeIngredient[]
+  dietaryTags               RecipeDietaryTag[]
+  favoritedBy               FavoriteRecipe[]
+  reviews                   Review[]
+  cooksnaps                 Cooksnap[]
+  shoppingListItems         ShoppingListItem[]
+  shoppingListRecipeSources ShoppingListRecipeSource[]
 
   @@map("recipes")
 }
@@ -224,18 +227,21 @@ model Cooksnap {
 // ================= NEW MODELS =================
 
 model SavedFilter {
-  id               String   @id @default(uuid())
-  userId           String   @map("user_id")
-  name             String
-  categoryId       Int?     @map("category_id")
-  dietaryRegimeIds Int[]    @default([]) @map("dietary_regime_ids")
-  maxCookingTime   Int?     @map("max_cooking_time")
-  minRating        Float?   @map("min_rating")
-  excludeAllergies Boolean  @default(false) @map("exclude_allergies")
-  sortBy           String?  @map("sort_by") // newest | rating | cooking_time
-  isDefault        Boolean  @default(false) @map("is_default")
-  createdAt        DateTime @default(now()) @map("created_at")
-  updatedAt        DateTime @updatedAt @map("updated_at")
+  id                    String    @id @default(uuid())
+  userId                String    @map("user_id")
+  filterName            String?   @map("filter_name")
+  name                  String?   @map("name")
+  categoryId            Int?      @map("category_id")
+  dietaryIds            Int[]     @default([]) @map("dietary_ids")
+  dietaryRegimeIds      Int[]     @default([]) @map("dietary_regime_ids")
+  excludedIngredientIds Int[]     @default([]) @map("excluded_ingredient_ids")
+  maxCookingTime        Int?      @map("max_cooking_time")
+  minRating             Float?    @map("min_rating")
+  excludeAllergies      Boolean   @default(false) @map("exclude_allergies")
+  sortBy                String?   @map("sort_by") // newest | rating | cooking_time
+  isDefault             Boolean   @default(false) @map("is_default")
+  createdAt             DateTime  @default(now()) @map("created_at")
+  updatedAt             DateTime  @updatedAt @map("updated_at")
 
   user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   category Category? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
@@ -245,24 +251,40 @@ model SavedFilter {
 }
 
 model ShoppingListItem {
-  id             String   @id @default(uuid())
-  userId         String   @map("user_id")
-  ingredientId   Int?     @map("ingredient_id")
-  customName     String?  @map("custom_name")
-  quantity       Float    @default(1)
+  id             String                     @id @default(uuid())
+  userId         String                     @map("user_id")
+  ingredientId   Int?                       @map("ingredient_id")
+  customName     String?                    @map("custom_name")
+  quantity       Float                      @default(1)
+  totalQuantity  Float                      @default(1) @map("total_quantity")
   unit           String?
-  isChecked      Boolean  @default(false) @map("is_checked")
-  sourceRecipeId String?  @map("source_recipe_id")
+  isChecked      Boolean                    @default(false) @map("is_checked")
+  isPurchased    Boolean                    @default(false) @map("is_purchased")
+  sourceRecipeId String?                    @map("source_recipe_id")
   note           String?
-  createdAt      DateTime @default(now()) @map("created_at")
-  updatedAt      DateTime @updatedAt @map("updated_at")
+  createdAt      DateTime                   @default(now()) @map("created_at")
+  updatedAt      DateTime                   @updatedAt @map("updated_at")
 
-  user         User        @relation(fields: [userId], references: [id], onDelete: Cascade)
-  ingredient   Ingredient? @relation(fields: [ingredientId], references: [id], onDelete: SetNull)
-  sourceRecipe Recipe?     @relation(fields: [sourceRecipeId], references: [id], onDelete: SetNull)
+  user         User                       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  ingredient   Ingredient?                @relation(fields: [ingredientId], references: [id], onDelete: SetNull)
+  sourceRecipe Recipe?                    @relation(fields: [sourceRecipeId], references: [id], onDelete: SetNull)
+  sources      ShoppingListRecipeSource[]
 
+  @@unique([userId, ingredientId])
   @@index([userId, isChecked])
   @@map("shopping_list_items")
+}
+
+model ShoppingListRecipeSource {
+  shoppingItemId String @map("shopping_item_id")
+  recipeId       String @map("recipe_id")
+  addedQuantity  Float  @map("added_quantity")
+
+  shoppingItem ShoppingListItem @relation(fields: [shoppingItemId], references: [id], onDelete: Cascade)
+  recipe       Recipe           @relation(fields: [recipeId], references: [id], onDelete: Cascade)
+
+  @@id([shoppingItemId, recipeId])
+  @@map("shopping_list_recipe_sources")
 }
 
 model Follow {
@@ -277,18 +299,20 @@ model Follow {
   @@map("follows")
 }
 
-model DeviceToken {
-  id        String   @id @default(uuid())
-  userId    String   @map("user_id")
-  token     String   @unique
-  platform  String   @default("android") // android | ios | web
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
+model UserDevice {
+  id           String    @id @default(uuid())
+  userId       String    @map("user_id")
+  token        String    @unique @map("fcm_token")
+  deviceModel  String?   @default("android") @map("device_model")
+  platform     String?   @default("android") @map("platform")
+  lastActiveAt DateTime  @default(now()) @map("last_active_at")
+  createdAt    DateTime  @default(now()) @map("created_at")
+  updatedAt    DateTime  @updatedAt @map("updated_at")
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
-  @@map("device_tokens")
+  @@map("user_devices")
 }
 
 model Notification {
@@ -296,6 +320,7 @@ model Notification {
   recipientId String           @map("recipient_id")
   actorId     String?          @map("actor_id")
   type        NotificationType
+  referenceId String?          @map("reference_id")
   title       String
   body        String
   data        Json?
