@@ -7,6 +7,12 @@ import {
   updateRecipeTransaction,
   RecipeTransactionError,
 } from './recipe.transaction';
+import { filterRecipesQuery } from './recipe.filter';
+import {
+  toggleFavoriteRecipe,
+  checkFavoriteStatus,
+  getUserFavoriteRecipes,
+} from './recipe.favorite';
 import { ErrorCodes } from '../../common/errors';
 
 export const getRecipes = async (req: AuthRequest, res: Response) => {
@@ -241,6 +247,7 @@ export const getRecipeById = async (req: AuthRequest, res: Response) => {
   const recipeId = String(req.params.id);
   const currentUserId = req.user?.id;
 
+  // lấy thông tin chi tiết công thức
   const recipe = await prisma.recipe.findUnique({
     where: { id: recipeId },
     include: {
@@ -299,6 +306,7 @@ export const getRecipeById = async (req: AuthRequest, res: Response) => {
     },
   });
 
+  // kiểm tra công thức có tồn tại không
   if (!recipe) {
     return res.status(404).json({
       success: false,
@@ -307,6 +315,7 @@ export const getRecipeById = async (req: AuthRequest, res: Response) => {
     });
   }
 
+  // kiểm tra người dùng đã yêu thích công thức chưa
   let isFavorited = false;
 
   if (currentUserId) {
@@ -322,6 +331,7 @@ export const getRecipeById = async (req: AuthRequest, res: Response) => {
     isFavorited = !!fav;
   }
 
+  // trả kết quả chi tiết công thức
   return res.status(200).json({
     success: true,
     message: 'Lấy chi tiết công thức thành công.',
@@ -392,7 +402,7 @@ export const createRecipe = async (req: AuthRequest, res: Response) => {
       });
     }
 
-    console.error('Create recipe transaction error:', error);
+    console.error('Loi tao cong thuc mon an:', error);
     return res.status(500).json({
       success: false,
       errorCode: ErrorCodes.INTERNAL_SERVER_ERROR,
@@ -425,7 +435,7 @@ export const updateRecipe = async (req: AuthRequest, res: Response) => {
       });
     }
 
-    console.error('Update recipe transaction error:', error);
+    console.error('Loi cap nhat cong thuc mon an:', error);
     return res.status(500).json({
       success: false,
       errorCode: ErrorCodes.INTERNAL_SERVER_ERROR,

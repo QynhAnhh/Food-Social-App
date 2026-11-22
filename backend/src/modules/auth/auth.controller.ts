@@ -94,7 +94,7 @@ export const googleLogin = async (req: Request, res: Response) => {
       },
     });
   } catch (error) {
-    console.error('Google login error:', error);
+    console.error('Loi dang nhap Google:', error);
 
     return res.status(401).json({
       success: false,

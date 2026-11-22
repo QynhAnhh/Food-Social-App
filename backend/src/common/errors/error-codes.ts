@@ -36,7 +36,7 @@ export const ErrorCodes = {
   INGREDIENT_NOT_FOUND: 'INGREDIENT_NOT_FOUND',
   DIETARY_REGIME_NOT_FOUND: 'DIETARY_REGIME_NOT_FOUND',
 
-  // 4. Nhóm Tiện ích (Fridge & Shopping List - 400, 404)
+  // 4. Nhóm Tiện ích (Fridge & Shopping List & Search Filters - 400, 404)
   EMPTY_FRIDGE_QUERY: 'EMPTY_FRIDGE_QUERY',
   FRIDGE_ITEM_NOT_FOUND: 'FRIDGE_ITEM_NOT_FOUND',
   SHOPPING_ITEM_NOT_FOUND: 'SHOPPING_ITEM_NOT_FOUND',

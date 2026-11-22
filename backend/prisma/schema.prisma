@@ -105,7 +105,7 @@ model UserFridgeItem {
   id           String    @id @default(uuid())
   userId       String    @map("user_id")
   ingredientId Int       @map("ingredient_id")
-  quantity     Float
+  quantity     Float // Khối lượng hiện có theo đơn vị chuẩn của Ingredient
   expiryDate   DateTime? @map("expiry_date")
   updatedAt    DateTime  @updatedAt @map("updated_at")
 
@@ -129,15 +129,15 @@ model Recipe {
   createdAt     DateTime @default(now()) @map("created_at")
   updatedAt     DateTime @updatedAt @map("updated_at")
 
-  author            User               @relation(fields: [authorId], references: [id], onDelete: Cascade)
-  category          Category           @relation(fields: [categoryId], references: [id])
-  steps             RecipeStep[]
-  ingredients       RecipeIngredient[]
-  dietaryTags       RecipeDietaryTag[]
-  favoritedBy       FavoriteRecipe[]
-  reviews           Review[]
-  cooksnaps         Cooksnap[]
-  shoppingListItems ShoppingListItem[]
+  author              User                       @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  category            Category                   @relation(fields: [categoryId], references: [id])
+  steps               RecipeStep[]
+  ingredients         RecipeIngredient[]
+  dietaryTags         RecipeDietaryTag[]
+  favoritedBy         FavoriteRecipe[]
+  reviews             Review[]
+  cooksnaps           Cooksnap[]
+  shoppingListSources ShoppingListRecipeSource[]
 
   @@map("recipes")
 }

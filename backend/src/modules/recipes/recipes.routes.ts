@@ -1,4 +1,3 @@
-
 import { Router } from 'express';
 import {
   authenticate,
@@ -11,6 +10,9 @@ import {
   getRecipeById,
   createRecipe,
   updateRecipe,
+  toggleFavorite,
+  getFavoriteStatus,
+  getMyFavoriteRecipes,
 } from './recipes.controller';
 
 export const recipesRouter = Router();
