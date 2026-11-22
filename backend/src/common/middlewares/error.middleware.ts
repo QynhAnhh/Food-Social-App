@@ -1,19 +1,21 @@
-import { Request, Response, NextFunction, ErrorRequestHandler } from 'express';
+import {
+  Request,
+  Response,
+  NextFunction,
+  ErrorRequestHandler,
+} from 'express';
 import { ZodError } from 'zod';
+import { Prisma } from '@prisma/client';
 import { AppError } from '../errors/app-error';
 import { ErrorCodes } from '../errors/error-codes';
 
-/**
- * Middleware xử lý lỗi tập trung toàn hệ thống (Global Error Handler)
- * Tuân thủ theo mục 1 & 3.1 của docs/conventions/error-handling-codes.md
- */
 export const errorHandler: ErrorRequestHandler = (
-  err: any,
+  err: unknown,
   _req: Request,
   res: Response,
   _next: NextFunction,
 ) => {
-  // 1. Bắt lỗi từ Zod validation
+  // 1. Zod validation errors
   if (err instanceof ZodError) {
     const details = err.errors.map((e) => ({
       field: e.path.join('.'),
@@ -29,8 +31,12 @@ export const errorHandler: ErrorRequestHandler = (
     });
   }
 
-  // 2. Bắt lỗi nghiệp vụ AppError (và các lớp con)
+  // 2. Application errors
   if (err instanceof AppError) {
+    if (err.statusCode >= 500) {
+      console.error('Unhandled Server Error:', err);
+    }
+
     return res.status(err.statusCode).json({
       success: false,
       errorCode: err.errorCode,
@@ -40,22 +46,49 @@ export const errorHandler: ErrorRequestHandler = (
     });
   }
 
-  const statusCode = err.statusCode || 500;
-  const errorCode = err.errorCode || ErrorCodes.INTERNAL_SERVER_ERROR;
-  const message = err.message || 'Đã có lỗi xảy ra trên hệ thống.';
-  const details = err.details || [];
+  // 3. Prisma known request errors
+  if (err instanceof Prisma.PrismaClientKnownRequestError) {
+    let statusCode = 500;
+    let message = 'Đã có lỗi xảy ra trên hệ thống.';
 
-  // Ghi log nếu là lỗi máy chủ nghiêm trọng (500)
-  if (statusCode >= 500) {
-    console.error('Loi he thong chua duoc xu ly:', err);
+    switch (err.code) {
+      case 'P2002':
+        statusCode = 409;
+        message = 'Dữ liệu đã tồn tại.';
+        break;
+
+      case 'P2003':
+        statusCode = 400;
+        message = 'Dữ liệu tham chiếu không hợp lệ.';
+        break;
+
+      case 'P2025':
+        statusCode = 404;
+        message = 'Không tìm thấy dữ liệu cần thao tác.';
+        break;
+    }
+
+    if (statusCode >= 500) {
+      console.error('Unhandled Prisma Error:', err);
+    }
+
+    return res.status(statusCode).json({
+      success: false,
+      errorCode: ErrorCodes.INTERNAL_SERVER_ERROR,
+      message,
+      details: [],
+      timestamp: new Date().toISOString(),
+    });
   }
 
-  return res.status(statusCode).json({
+  // 4. Unknown errors
+  console.error('Unhandled Server Error:', err);
+
+  return res.status(500).json({
     success: false,
-    errorCode,
-    message,
-    details,
+    errorCode: ErrorCodes.INTERNAL_SERVER_ERROR,
+    message: 'Đã có lỗi xảy ra trên hệ thống.',
+    details: [],
     timestamp: new Date().toISOString(),
   });
 };
-

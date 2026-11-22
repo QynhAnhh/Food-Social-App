@@ -1,5 +1,5 @@
-
 import { Response } from 'express';
+import { Prisma } from '@prisma/client';
 import { prisma } from '../../config/prisma';
 import { AuthRequest } from '../../common/middlewares/auth.middleware';
 import {
@@ -15,10 +15,235 @@ import {
 } from './recipe.favorite';
 import { ErrorCodes } from '../../common/errors';
 
-export const getRecipeById = async (
-  req: AuthRequest,
-  res: Response,
-) => {
+export const getRecipes = async (req: AuthRequest, res: Response) => {
+  try {
+    const currentUserId = req.user?.id;
+
+    // 1. Phân trang
+    const page = Math.max(1, parseInt(String(req.query.page || '1'), 10) || 1);
+    const limit = Math.min(
+      50,
+      Math.max(1, parseInt(String(req.query.limit || '10'), 10) || 10),
+    );
+    const skip = (page - 1) * limit;
+
+    // 2. Lấy bộ lọc mặc định của user (nếu đã đăng nhập & không tắt bằng useDefaultFilter=false)
+    const shouldApplyDefault =
+      Boolean(currentUserId) && String(req.query.useDefaultFilter) !== 'false';
+
+    const defaultFilter = shouldApplyDefault
+      ? await prisma.savedFilter.findFirst({
+          where: { userId: currentUserId!, isDefault: true },
+        })
+      : null;
+
+    // 3. Hợp nhất tham số URL (ưu tiên hơn) với bộ lọc mặc định
+    const searchKeyword = String(req.query.q ?? req.query.search ?? '').trim();
+
+    const queryCategoryId =
+      req.query.categoryId !== undefined
+        ? Number(req.query.categoryId)
+        : defaultFilter?.categoryId ?? undefined;
+
+    const categorySlug = req.query.categorySlug
+      ? String(req.query.categorySlug).trim()
+      : undefined;
+
+    let dietaryRegimeIds: number[] = defaultFilter?.dietaryRegimeIds ?? [];
+    if (req.query.dietaryRegimeIds !== undefined) {
+      const raw = String(req.query.dietaryRegimeIds).trim();
+      dietaryRegimeIds = raw
+        ? raw
+            .split(',')
+            .map((v) => Number(v.trim()))
+            .filter((n) => Number.isInteger(n) && n > 0)
+        : [];
+    }
+
+    const maxCookingTime =
+      req.query.maxCookingTime !== undefined
+        ? Number(req.query.maxCookingTime)
+        : defaultFilter?.maxCookingTime ?? undefined;
+
+    const minRating =
+      req.query.minRating !== undefined
+        ? Number(req.query.minRating)
+        : defaultFilter?.minRating ?? undefined;
+
+    const excludeAllergies =
+      req.query.excludeAllergies !== undefined
+        ? String(req.query.excludeAllergies) === 'true'
+        : defaultFilter?.excludeAllergies ?? false;
+
+    const sortBy = String(
+      req.query.sortBy ?? defaultFilter?.sortBy ?? 'newest',
+    );
+
+    // 4. Xây dựng điều kiện WHERE
+    const where: Prisma.RecipeWhereInput = {};
+
+    if (searchKeyword) {
+      where.title = {
+        contains: searchKeyword,
+        mode: 'insensitive',
+      };
+    }
+
+    if (queryCategoryId && !Number.isNaN(queryCategoryId)) {
+      where.categoryId = queryCategoryId;
+    } else if (categorySlug) {
+      where.category = { slug: categorySlug };
+    }
+
+    if (dietaryRegimeIds.length > 0) {
+      where.dietaryTags = {
+        some: {
+          dietaryRegimeId: { in: dietaryRegimeIds },
+        },
+      };
+    }
+
+    if (maxCookingTime && !Number.isNaN(maxCookingTime) && maxCookingTime > 0) {
+      where.cookingTime = { lte: maxCookingTime };
+    }
+
+    if (minRating !== undefined && !Number.isNaN(minRating) && minRating > 0) {
+      where.averageRating = { gte: minRating };
+    }
+
+    // Loại trừ món chứa nguyên liệu user bị dị ứng
+    if (excludeAllergies && currentUserId) {
+      const allergies = await prisma.userAllergy.findMany({
+        where: { userId: currentUserId },
+        select: { ingredientId: true },
+      });
+      const allergyIds = allergies.map((a) => a.ingredientId);
+
+      if (allergyIds.length > 0) {
+        where.ingredients = {
+          none: {
+            ingredientId: { in: allergyIds },
+          },
+        };
+      }
+    }
+
+    // 5. Sắp xếp
+    let orderBy: Prisma.RecipeOrderByWithRelationInput = { createdAt: 'desc' };
+    if (sortBy === 'rating') {
+      orderBy = { averageRating: 'desc' };
+    } else if (sortBy === 'cooking_time') {
+      orderBy = { cookingTime: 'asc' };
+    }
+
+    // 6. Query song song danh sách + tổng số bản ghi
+    const [recipes, total] = await Promise.all([
+      prisma.recipe.findMany({
+        where,
+        orderBy,
+        skip,
+        take: limit,
+        include: {
+          author: {
+            select: {
+              id: true,
+              nickname: true,
+              fullName: true,
+              avatarUrl: true,
+            },
+          },
+          category: {
+            select: {
+              id: true,
+              name: true,
+              slug: true,
+              iconUrl: true,
+            },
+          },
+          dietaryTags: {
+            include: {
+              dietaryRegime: {
+                select: { id: true, name: true, slug: true },
+              },
+            },
+          },
+          _count: {
+            select: {
+              reviews: true,
+              cooksnaps: true,
+              favoritedBy: true,
+            },
+          },
+        },
+      }),
+      prisma.recipe.count({ where }),
+    ]);
+
+    // Check trạng thái yêu thích hàng loạt cho user đang đăng nhập
+    let favoritedSet = new Set<string>();
+    if (currentUserId && recipes.length > 0) {
+      const favs = await prisma.favoriteRecipe.findMany({
+        where: {
+          userId: currentUserId,
+          recipeId: { in: recipes.map((r) => r.id) },
+        },
+        select: { recipeId: true },
+      });
+      favoritedSet = new Set(favs.map((f) => f.recipeId));
+    }
+
+    const totalPages = Math.ceil(total / limit);
+
+    return res.status(200).json({
+      success: true,
+      message: 'Lấy danh sách công thức thành công.',
+      data: {
+        items: recipes.map((r) => ({
+          id: r.id,
+          title: r.title,
+          description: r.description,
+          thumbnailUrl: r.thumbnailUrl,
+          servings: r.servings,
+          cookingTime: r.cookingTime,
+          averageRating: r.averageRating,
+          isFavorited: favoritedSet.has(r.id),
+          author: r.author,
+          category: r.category,
+          dietaryTags: r.dietaryTags.map((t) => t.dietaryRegime),
+          stats: {
+            reviewsCount: r._count.reviews,
+            cooksnapsCount: r._count.cooksnaps,
+            favoritesCount: r._count.favoritedBy,
+          },
+          createdAt: r.createdAt,
+        })),
+        pagination: {
+          page,
+          limit,
+          total,
+          totalPages,
+          hasNextPage: page < totalPages,
+          hasPrevPage: page > 1,
+        },
+        appliedDefaultFilter: defaultFilter
+          ? {
+              id: defaultFilter.id,
+              name: defaultFilter.name,
+            }
+          : null,
+      },
+    });
+  } catch (error) {
+    console.error('Get recipes error:', error);
+    return res.status(500).json({
+      success: false,
+      errorCode: ErrorCodes.INTERNAL_SERVER_ERROR,
+      message: 'Đã có lỗi xảy ra khi lấy danh sách công thức.',
+    });
+  }
+};
+
+export const getRecipeById = async (req: AuthRequest, res: Response) => {
   const recipeId = String(req.params.id);
   const currentUserId = req.user?.id;
 
@@ -129,9 +354,7 @@ export const getRecipeById = async (
       author: recipe.author,
       category: recipe.category,
 
-      dietaryTags: recipe.dietaryTags.map(
-        (t) => t.dietaryRegime,
-      ),
+      dietaryTags: recipe.dietaryTags.map((t) => t.dietaryRegime),
 
       ingredients: recipe.ingredients.map((ri) => ({
         id: ri.id,
@@ -220,135 +443,3 @@ export const updateRecipe = async (req: AuthRequest, res: Response) => {
     });
   }
 };
-
-/**
- * GET /api/v1/recipes
- * bộ lọc đa tầng (danh mục, chế độ ăn, thời gian nấu, tìm kiếm từ khóa) kết hợp loại trừ dị ứng
- */
-export const getRecipes = async (req: AuthRequest, res: Response) => {
-  try {
-    const userId = req.user?.id;
-    const categoryId = req.query.categoryId ? Number(req.query.categoryId) : undefined;
-    const categorySlug = req.query.categorySlug ? String(req.query.categorySlug) : undefined;
-    const dietaryRegimeId = req.query.dietaryRegimeId ? Number(req.query.dietaryRegimeId) : undefined;
-    const dietaryRegimeSlug = req.query.dietaryRegimeSlug ? String(req.query.dietaryRegimeSlug) : undefined;
-    const maxCookingTime = req.query.maxCookingTime ? Number(req.query.maxCookingTime) : undefined;
-    const minRating = req.query.minRating ? Number(req.query.minRating) : undefined;
-    const search = req.query.search ? String(req.query.search) : undefined;
-    const excludeAllergies = req.query.excludeAllergies !== undefined
-      ? req.query.excludeAllergies !== 'false'
-      : true;
-    const sortBy = (req.query.sortBy as any) || 'newest';
-    const sortDirection = (req.query.sortDirection as any) || undefined;
-    const page = req.query.page ? Number(req.query.page) : 1;
-    const limit = req.query.limit ? Number(req.query.limit) : 10;
-
-    const result = await filterRecipesQuery({
-      userId,
-      categoryId,
-      categorySlug,
-      dietaryRegimeId,
-      dietaryRegimeSlug,
-      maxCookingTime,
-      minRating,
-      search,
-      excludeAllergies,
-      sortBy,
-      sortDirection,
-      page,
-      limit,
-    });
-
-    return res.status(200).json({
-      success: true,
-      message: 'Lấy danh sách công thức thành công.',
-      ...result,
-    });
-  } catch (error: any) {
-    console.error('Loi loc cong thuc mon an:', error);
-    return res.status(error.statusCode || 500).json({
-      success: false,
-      errorCode: error.errorCode || ErrorCodes.INTERNAL_SERVER_ERROR,
-      message: error.message || 'Đã có lỗi xảy ra khi truy vấn công thức.',
-    });
-  }
-};
-
-/**
- * POST /api/v1/recipes/:id/favorite
- * thả tim / hủy thả tim công thức
- */
-export const toggleFavorite = async (req: AuthRequest, res: Response) => {
-  try {
-    const recipeId = String(req.params.id);
-    const userId = req.user!.id;
-
-    const result = await toggleFavoriteRecipe(userId, recipeId);
-
-    return res.status(200).json({
-      success: true,
-      ...result,
-    });
-  } catch (error: any) {
-    console.error('Loi tha tim / bo tim cong thuc:', error);
-    return res.status(error.statusCode || 500).json({
-      success: false,
-      errorCode: error.errorCode || ErrorCodes.INTERNAL_SERVER_ERROR,
-      message: error.message || 'Đã có lỗi xảy ra khi cập nhật yêu thích.',
-    });
-  }
-};
-
-/**
- * GET /api/v1/recipes/:id/favorite
- * kiểm tra trạng thái đã thả tim của người dùng hiện tại
- */
-export const getFavoriteStatus = async (req: AuthRequest, res: Response) => {
-  try {
-    const recipeId = String(req.params.id);
-    const userId = req.user!.id;
-
-    const result = await checkFavoriteStatus(userId, recipeId);
-
-    return res.status(200).json({
-      success: true,
-      data: result,
-    });
-  } catch (error: any) {
-    console.error('Loi kiem tra trang thai tha tim:', error);
-    return res.status(error.statusCode || 500).json({
-      success: false,
-      errorCode: error.errorCode || ErrorCodes.INTERNAL_SERVER_ERROR,
-      message: error.message || 'Đã có lỗi xảy ra khi kiểm tra trạng thái yêu thích.',
-    });
-  }
-};
-
-/**
- * GET /api/v1/recipes/favorites/my
- * lấy danh sách toàn bộ công thức người dùng đã lưu yêu thích
- */
-export const getMyFavoriteRecipes = async (req: AuthRequest, res: Response) => {
-  try {
-    const userId = req.user!.id;
-    const page = req.query.page ? Number(req.query.page) : 1;
-    const limit = req.query.limit ? Number(req.query.limit) : 10;
-
-    const result = await getUserFavoriteRecipes(userId, { page, limit });
-
-    return res.status(200).json({
-      success: true,
-      message: 'Lấy danh sách công thức yêu thích thành công.',
-      ...result,
-    });
-  } catch (error: any) {
-    console.error('Loi lay danh sach cong thuc yeu thich:', error);
-    return res.status(error.statusCode || 500).json({
-      success: false,
-      errorCode: error.errorCode || ErrorCodes.INTERNAL_SERVER_ERROR,
-      message: error.message || 'Đã có lỗi xảy ra khi lấy danh sách yêu thích.',
-    });
-  }
-};
-
-

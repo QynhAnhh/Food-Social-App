@@ -12,7 +12,6 @@ enum Role {
   ADMIN
 }
 
-// Enum trạng thái công thức
 enum RecipeStatus {
   DRAFT
   PENDING_REVIEW
@@ -20,7 +19,13 @@ enum RecipeStatus {
   HIDDEN
 }
 
-// 2. Bảng users (Người dùng cốt lõi)
+enum NotificationType {
+  NEW_FOLLOWER
+  NEW_REVIEW
+  NEW_COOKSNAP
+  SYSTEM
+}
+
 model User {
   id          String   @id @default(uuid())
   firebaseUid String   @unique @map("firebase_uid")
@@ -33,14 +38,19 @@ model User {
   createdAt   DateTime @default(now()) @map("created_at")
   updatedAt   DateTime @updatedAt @map("updated_at")
 
-  recipes           Recipe[]
-  allergies         UserAllergy[]
-  fridgeItems       UserFridgeItem[]
-  favoriteRecipes   FavoriteRecipe[]
-  reviews           Review[]
-  cooksnaps         Cooksnap[]
-  savedFilters      SavedFilter[]
-  shoppingListItems ShoppingListItem[]
+  recipes               Recipe[]
+  allergies             UserAllergy[]
+  fridgeItems           UserFridgeItem[]
+  favoriteRecipes       FavoriteRecipe[]
+  reviews               Review[]
+  cooksnaps             Cooksnap[]
+  savedFilters          SavedFilter[]
+  shoppingListItems     ShoppingListItem[]
+  followers             Follow[]           @relation("UserFollowers")
+  following             Follow[]           @relation("UserFollowing")
+  deviceTokens          DeviceToken[]
+  receivedNotifications Notification[]     @relation("NotificationRecipient")
+  sentNotifications     Notification[]     @relation("NotificationActor")
 
   @@map("users")
 }
@@ -69,7 +79,7 @@ model DietaryRegime {
 model Ingredient {
   id               Int     @id @default(autoincrement())
   name             String  @unique
-  standardUnit     String  @map("standard_unit") // gram, ml, quả, muỗng...
+  standardUnit     String  @map("standard_unit")
   imageUrl         String? @map("image_url")
   isAllergenCommon Boolean @default(false) @map("is_allergen_common")
 
@@ -114,7 +124,7 @@ model Recipe {
   description   String?
   thumbnailUrl  String   @map("thumbnail_url")
   servings      Int      @default(2)
-  cookingTime   Int      @map("cooking_time") // Tính bằng phút
+  cookingTime   Int      @map("cooking_time")
   averageRating Float    @default(0) @map("average_rating")
   createdAt     DateTime @default(now()) @map("created_at")
   updatedAt     DateTime @updatedAt @map("updated_at")
@@ -151,7 +161,7 @@ model RecipeIngredient {
   recipeId     String  @map("recipe_id")
   ingredientId Int     @map("ingredient_id")
   quantity     Float
-  note         String? // VD: "Thái lát mỏng", "Băm nhuyễn"
+  note         String?
 
   recipe     Recipe     @relation(fields: [recipeId], references: [id], onDelete: Cascade)
   ingredient Ingredient @relation(fields: [ingredientId], references: [id])
@@ -193,6 +203,7 @@ model Review {
   recipe Recipe @relation(fields: [recipeId], references: [id], onDelete: Cascade)
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
+  @@unique([recipeId, userId])
   @@map("reviews")
 }
 
@@ -210,50 +221,90 @@ model Cooksnap {
   @@map("cooksnaps")
 }
 
-// 14. Bảng saved_filters (Bộ lọc cá nhân đã lưu - Bảng số 4 trong tài liệu)
+// ================= NEW MODELS =================
+
 model SavedFilter {
-  id                    String   @id @default(uuid())
-  userId                String   @map("user_id")
-  filterName            String   @map("filter_name")
-  categoryId            Int?     @map("category_id")
-  dietaryIds            Int[]    @default([]) @map("dietary_ids")
-  excludedIngredientIds Int[]    @default([]) @map("excluded_ingredient_ids")
-  maxCookingTime        Int?     @map("max_cooking_time") // Phút (NULL nếu không giới hạn)
-  isDefault             Boolean  @default(false) @map("is_default")
-  createdAt             DateTime @default(now()) @map("created_at")
+  id               String   @id @default(uuid())
+  userId           String   @map("user_id")
+  name             String
+  categoryId       Int?     @map("category_id")
+  dietaryRegimeIds Int[]    @default([]) @map("dietary_regime_ids")
+  maxCookingTime   Int?     @map("max_cooking_time")
+  minRating        Float?   @map("min_rating")
+  excludeAllergies Boolean  @default(false) @map("exclude_allergies")
+  sortBy           String?  @map("sort_by") // newest | rating | cooking_time
+  isDefault        Boolean  @default(false) @map("is_default")
+  createdAt        DateTime @default(now()) @map("created_at")
+  updatedAt        DateTime @updatedAt @map("updated_at")
 
   user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   category Category? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
 
+  @@index([userId, isDefault])
   @@map("saved_filters")
 }
 
-// 15. Bảng shopping_list_items (Danh sách đi chợ - Bảng số 12 trong tài liệu)
 model ShoppingListItem {
-  id            String   @id @default(uuid())
-  userId        String   @map("user_id")
-  ingredientId  Int      @map("ingredient_id")
-  totalQuantity Float    @map("total_quantity") // DECIMAL(10,2) cộng dồn tự động
-  isPurchased   Boolean  @default(false) @map("is_purchased")
-  updatedAt     DateTime @updatedAt @map("updated_at")
+  id             String   @id @default(uuid())
+  userId         String   @map("user_id")
+  ingredientId   Int?     @map("ingredient_id")
+  customName     String?  @map("custom_name")
+  quantity       Float    @default(1)
+  unit           String?
+  isChecked      Boolean  @default(false) @map("is_checked")
+  sourceRecipeId String?  @map("source_recipe_id")
+  note           String?
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
 
-  user          User                       @relation(fields: [userId], references: [id], onDelete: Cascade)
-  ingredient    Ingredient                 @relation(fields: [ingredientId], references: [id], onDelete: Cascade)
-  recipeSources ShoppingListRecipeSource[]
+  user         User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  ingredient   Ingredient? @relation(fields: [ingredientId], references: [id], onDelete: SetNull)
+  sourceRecipe Recipe?     @relation(fields: [sourceRecipeId], references: [id], onDelete: SetNull)
 
-  @@unique([userId, ingredientId])
+  @@index([userId, isChecked])
   @@map("shopping_list_items")
 }
 
-// 16. Bảng shopping_list_recipe_sources (Truy vết nguồn công thức - Bảng số 13 trong tài liệu)
-model ShoppingListRecipeSource {
-  shoppingItemId String @map("shopping_item_id")
-  recipeId       String @map("recipe_id")
-  addedQuantity  Float  @map("added_quantity") // DECIMAL(10,2)
+model Follow {
+  followerId  String   @map("follower_id")
+  followingId String   @map("following_id")
+  createdAt   DateTime @default(now()) @map("created_at")
 
-  shoppingItem ShoppingListItem @relation(fields: [shoppingItemId], references: [id], onDelete: Cascade)
-  recipe       Recipe           @relation(fields: [recipeId], references: [id], onDelete: Cascade)
+  follower  User @relation("UserFollowing", fields: [followerId], references: [id], onDelete: Cascade)
+  following User @relation("UserFollowers", fields: [followingId], references: [id], onDelete: Cascade)
 
-  @@id([shoppingItemId, recipeId])
-  @@map("shopping_list_recipe_sources")
+  @@id([followerId, followingId])
+  @@map("follows")
+}
+
+model DeviceToken {
+  id        String   @id @default(uuid())
+  userId    String   @map("user_id")
+  token     String   @unique
+  platform  String   @default("android") // android | ios | web
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("device_tokens")
+}
+
+model Notification {
+  id          String           @id @default(uuid())
+  recipientId String           @map("recipient_id")
+  actorId     String?          @map("actor_id")
+  type        NotificationType
+  title       String
+  body        String
+  data        Json?
+  isRead      Boolean          @default(false) @map("is_read")
+  createdAt   DateTime         @default(now()) @map("created_at")
+
+  recipient User  @relation("NotificationRecipient", fields: [recipientId], references: [id], onDelete: Cascade)
+  actor     User? @relation("NotificationActor", fields: [actorId], references: [id], onDelete: SetNull)
+
+  @@index([recipientId, isRead, createdAt])
+  @@map("notifications")
 }

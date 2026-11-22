@@ -13,7 +13,11 @@ export interface AuthRequest extends Request {
   };
 }
 
-export const authenticate = async (req: AuthRequest, res: Response, next: NextFunction) => {
+export const authenticate = async (
+  req: AuthRequest,
+  res: Response,
+  next: NextFunction,
+) => {
   try {
     const authHeader = req.headers.authorization;
     if (!authHeader?.startsWith('Bearer ')) {
@@ -56,7 +60,11 @@ export const authenticate = async (req: AuthRequest, res: Response, next: NextFu
   }
 };
 
-export const optionalAuthenticate = async (req: AuthRequest, _res: Response, next: NextFunction) => {
+export const optionalAuthenticate = async (
+  req: AuthRequest,
+  _res: Response,
+  next: NextFunction,
+) => {
   try {
     const authHeader = req.headers.authorization;
     if (!authHeader?.startsWith('Bearer ')) {
@@ -79,8 +87,8 @@ export const optionalAuthenticate = async (req: AuthRequest, _res: Response, nex
         role: user.role,
       };
     }
-    return next();
   } catch {
-    return next();
+    // Bỏ qua lỗi token đối với route cho phép truy cập không cần đăng nhập
   }
+  return next();
 };

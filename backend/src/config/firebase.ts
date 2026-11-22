@@ -1,3 +1,4 @@
+
 import admin from 'firebase-admin';
 
 if (!admin.apps.length) {
@@ -7,9 +8,17 @@ if (!admin.apps.length) {
       clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
       privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
     }),
-    storageBucket: process.env.FIREBASE_STORAGE_BUCKET, // VD: food-social-app.appspot.com
+    ...(process.env.FIREBASE_STORAGE_BUCKET
+      ? { storageBucket: process.env.FIREBASE_STORAGE_BUCKET }
+      : {}),
   });
 }
 
 export const firebaseAuth = admin.auth();
-export const firebaseBucket = admin.storage().bucket();
+
+// Chỉ khởi tạo Storage khi đã có bucket.
+export const firebaseBucket = process.env.FIREBASE_STORAGE_BUCKET
+  ? admin.storage().bucket()
+  : null;
+
+export const firebaseMessaging = admin.messaging();

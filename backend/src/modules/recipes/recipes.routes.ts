@@ -1,5 +1,10 @@
 import { Router } from 'express';
-import { authenticate, optionalAuthenticate } from '../../common/middlewares/auth.middleware';
+import {
+  authenticate,
+  optionalAuthenticate,
+} from '../../common/middlewares/auth.middleware';
+import { asyncHandler } from '../../common/middlewares/async-handler';
+
 import {
   getRecipes,
   getRecipeById,
@@ -12,23 +17,26 @@ import {
 
 export const recipesRouter = Router();
 
-// lọc công thức đa tầng (Danh mục + Chế độ ăn + Loại trừ dị ứng)
-recipesRouter.get('/', optionalAuthenticate, getRecipes);
+recipesRouter.get(
+  '/',
+  optionalAuthenticate,
+  asyncHandler(getRecipes),
+);
 
-// lấy danh sách công thức người dùng hiện tại đã thả tim
-recipesRouter.get('/favorites/my', authenticate, getMyFavoriteRecipes);
+recipesRouter.get(
+  '/:id',
+  optionalAuthenticate,
+  asyncHandler(getRecipeById),
+);
 
-// tạo công thức mới (Transaction nhiều bảng)
-recipesRouter.post('/', authenticate, createRecipe);
+recipesRouter.post(
+  '/',
+  authenticate,
+  asyncHandler(createRecipe),
+);
 
-// chỉnh sửa công thức (Transaction đồng bộ nhiều bảng)
-recipesRouter.put('/:id', authenticate, updateRecipe);
-
-// thả tim / Hủy thả tim công thức
-recipesRouter.post('/:id/favorite', authenticate, toggleFavorite);
-
-// kiểm tra trạng thái đã thả tim của 1 công thức
-recipesRouter.get('/:id/favorite', authenticate, getFavoriteStatus);
-
-// lấy chi tiết công thức theo ID (kèm kiểm tra đã thích nếu đăng nhập)
-recipesRouter.get('/:id', optionalAuthenticate, getRecipeById);
+recipesRouter.put(
+  '/:id',
+  authenticate,
+  asyncHandler(updateRecipe),
+);
