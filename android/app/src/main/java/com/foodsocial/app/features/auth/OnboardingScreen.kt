@@ -1,12 +1,12 @@
-
 package com.foodsocial.app.features.auth
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.rememberCoroutineScope
@@ -14,180 +14,110 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
+import com.foodsocial.app.R
+import com.foodsocial.app.core.designsystem.*
 import kotlinx.coroutines.launch
 
-data class OnboardingPageInfo(
-    val icon: String,
+private data class OnboardingPageInfo(
+    val artwork: Int,
     val title: String,
     val description: String,
-    val buttonText: String
+    val buttonText: String,
+)
+
+private val pages = listOf(
+    OnboardingPageInfo(
+        R.drawable.onboarding_fridge,
+        "Hôm nay bếp bạn có gì?",
+        "Chọn những nguyên liệu bạn đang có để khám phá các món ăn có thể chế biến.",
+        "Tiếp tục",
+    ),
+    OnboardingPageInfo(
+        R.drawable.onboarding_cooking,
+        "Bắt tay vào nấu nào!",
+        "Tìm kiếm công thức yêu thích, lưu lại món ngon và biến mỗi bữa ăn thành niềm vui.",
+        "Bắt đầu ngay",
+    ),
 )
 
 @Composable
-fun OnboardingScreen(
-    onFinish: () -> Unit = {}
-) {
-    val pages = listOf(
-        OnboardingPageInfo(
-            icon = "🥬",
-            title = "Hôm nay bếp bạn có gì?",
-            description = "Chọn những nguyên liệu bạn đang có để khám phá các món ăn có thể chế biến",
-            buttonText = "Tiếp tục"
-        ),
-        OnboardingPageInfo(
-            icon = "🍳",
-            title = "Bắt tay vào nấu nào!",
-            description = "Tìm kiếm công thức yêu thích, lưu lại món ngon và biến mỗi bữa ăn thành niềm vui",
-            buttonText = "Bắt đầu ngay"
-        )
-    )
+fun OnboardingScreen(onFinish: () -> Unit) {
+    val pagerState = rememberPagerState(pageCount = { pages.size })
+    val scope = rememberCoroutineScope()
 
-    val pagerState = rememberPagerState(
-        pageCount = { pages.size }
-    )
-
-    val coroutineScope = rememberCoroutineScope()
-
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Color.White)
-            .padding(16.dp)
-    ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text(
-                text = "🍲 Food Social",
-                fontSize = 18.sp,
-                fontWeight = FontWeight.Bold
-            )
-
-            TextButton(onClick = onFinish) {
-                Text("Bỏ qua", color = Color.Gray)
-            }
-        }
-
-        Spacer(modifier = Modifier.height(24.dp))
-
-        HorizontalPager(
-            state = pagerState,
-            modifier = Modifier.weight(1f)
-        ) { position ->
-            OnboardingPage(page = pages[position])
-        }
-
-        Column(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
+    Surface(modifier = Modifier.fillMaxSize()) {
+        Column(Modifier.safeDrawingPadding().padding(horizontal = 20.dp)) {
             Row(
-                horizontalArrangement = Arrangement.Center,
-                modifier = Modifier.padding(bottom = 24.dp)
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                CookMateArtwork(R.drawable.cookmate_logo, Modifier.size(32.dp).clip(MaterialTheme.shapes.small))
+                Text("CookMate", Modifier.weight(1f).padding(start = 8.dp), style = MaterialTheme.typography.titleSmall)
+                TextButton(onClick = onFinish) { Text("Bỏ qua") }
+            }
+
+            HorizontalPager(state = pagerState, modifier = Modifier.weight(1f)) { position ->
+                OnboardingPage(pages[position])
+            }
+
+            val pageLabel = "Trang ${pagerState.currentPage + 1} trên ${pages.size}"
+            Row(
+                modifier = Modifier.padding(vertical = 12.dp).semantics { contentDescription = pageLabel },
+                horizontalArrangement = Arrangement.spacedBy(4.dp),
             ) {
                 repeat(pages.size) { index ->
-                    val selected = pagerState.currentPage == index
-
+                    val selected = index == pagerState.currentPage
                     Box(
-                        modifier = Modifier
-                            .padding(2.dp)
+                        Modifier.size(width = if (selected) 18.dp else 8.dp, height = 5.dp)
                             .clip(CircleShape)
-                            .background(
-                                if (selected) Color(0xFF4CAF50)
-                                else Color.LightGray
-                            )
-                            .height(8.dp)
-                            .width(if (selected) 24.dp else 8.dp)
+                            .background(if (selected) OnboardingGreen else MaterialTheme.colorScheme.surfaceVariant),
                     )
                 }
             }
 
-            Button(
+            CookMateButton(
+                label = pages[pagerState.currentPage].buttonText,
                 onClick = {
-                    if (pagerState.currentPage == pages.size - 1) {
+                    val page = pagerState.currentPage
+                    if (page == pages.lastIndex) {
                         onFinish()
                     } else {
-                        coroutineScope.launch {
-                            pagerState.animateScrollToPage(
-                                pagerState.currentPage + 1
-                            )
-                        }
+                        scope.launch { pagerState.animateScrollToPage(page + 1) }
                     }
                 },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(50.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(0xFF4CAF50)
-                ),
-                shape = RoundedCornerShape(25.dp)
-            ) {
-                Text(
-                    text = pages[pagerState.currentPage].buttonText,
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color.Black
-                )
-            }
-
-            Spacer(modifier = Modifier.height(24.dp))
+                modifier = Modifier.align(Alignment.CenterHorizontally)
+                    .padding(bottom = 20.dp).widthIn(min = 200.dp),
+                color = OnboardingGreen,
+                textColor = Color.Black,
+            )
         }
     }
 }
 
 @Composable
-fun OnboardingPage(page: OnboardingPageInfo) {
+private fun OnboardingPage(page: OnboardingPageInfo) {
     Column(
-        modifier = Modifier.fillMaxSize(),
-        horizontalAlignment = Alignment.CenterHorizontally
+        modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(vertical = 12.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(20.dp, Alignment.CenterVertically),
     ) {
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .weight(1f),
-            contentAlignment = Alignment.Center
-        ) {
-            Text(
-                text = page.icon,
-                fontSize = 100.sp
-            )
-        }
-
-        Spacer(modifier = Modifier.height(24.dp))
-
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .clip(RoundedCornerShape(20.dp))
-                .background(Color(0xFFA5E6B5))
-                .padding(24.dp),
-            contentAlignment = Alignment.Center
+        CookMateArtwork(page.artwork, Modifier.fillMaxWidth(0.9f).heightIn(max = 300.dp).aspectRatio(1.05f))
+        Surface(
+            modifier = Modifier.widthIn(max = 460.dp).fillMaxWidth(),
+            shape = MaterialTheme.shapes.large,
+            color = OnboardingMint,
+            contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
         ) {
             Column(
-                horizontalAlignment = Alignment.CenterHorizontally
+                Modifier.padding(20.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
             ) {
-                Text(
-                    text = page.title,
-                    fontSize = 20.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color.Black,
-                    textAlign = TextAlign.Center
-                )
-
-                Spacer(modifier = Modifier.height(12.dp))
-
-                Text(
-                    text = page.description,
-                    fontSize = 14.sp,
-                    color = Color.DarkGray,
-                    textAlign = TextAlign.Center
-                )
+                Text(page.title, style = MaterialTheme.typography.titleLarge)
+                Text(page.description, textAlign = TextAlign.Start)
             }
         }
     }
