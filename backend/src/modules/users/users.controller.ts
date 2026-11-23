@@ -1,4 +1,3 @@
-
 import { Response } from 'express';
 import multer from 'multer';
 import { z } from 'zod';
@@ -13,6 +12,21 @@ const upload = multer({
 });
 
 const nicknameRegex = /^[a-zA-Z0-9_.]{3,20}$/;
+
+const setupNicknameSchema = z.object({
+  nickname: z
+    .string()
+    .min(3, 'Nickname phải có tối thiểu 3 ký tự.')
+    .max(30, 'Nickname không được vượt quá 30 ký tự.')
+    .regex(
+      /^[a-z0-9._]+$/,
+      'Nickname chỉ được chứa chữ thường, số, dấu chấm và dấu gạch dưới.',
+    )
+    .refine(
+      (val) => !val.startsWith('.') && !val.endsWith('.'),
+      'Nickname không được bắt đầu hoặc kết thúc bằng dấu chấm.',
+    ),
+});
 
 const updateProfileSchema = z.object({
   nickname: z
@@ -29,6 +43,12 @@ const updateProfileSchema = z.object({
     .max(80)
     .optional(),
 
+  avatarUrl: z
+    .string()
+    .url('Đường dẫn avatar không hợp lệ')
+    .nullable()
+    .optional(),
+
   bio: z
     .string()
     .max(300, 'Tiểu sử tối đa 300 ký tự')
@@ -38,6 +58,10 @@ const updateProfileSchema = z.object({
   allergyIngredientIds: z
     .array(z.number().int().positive())
     .optional(),
+});
+
+const updateAllergiesSchema = z.object({
+  ingredientIds: z.array(z.number().int().positive()),
 });
 
 // get /api/v1/users/check-nickname?nickname=chef_nhat
@@ -79,7 +103,124 @@ export const checkNickname = async (
   });
 };
 
-// put /api/v1/users/profile
+// post /api/v1/users/setup-nickname
+export const setupNickname = async (
+  req: AuthRequest,
+  res: Response,
+) => {
+  const parsed = setupNicknameSchema.safeParse(req.body);
+
+  if (!parsed.success) {
+    return res.status(400).json({
+      success: false,
+      errorCode: ErrorCodes.INVALID_NICKNAME_FORMAT,
+      message: parsed.error.errors[0].message,
+    });
+  }
+
+  const userId = req.user!.id;
+  const { nickname } = parsed.data;
+
+  if (req.user!.nickname) {
+    return res.status(400).json({
+      success: false,
+      errorCode: ErrorCodes.NICKNAME_ALREADY_SET,
+      message: 'Tài khoản đã có nickname, không được phép gọi lại API này.',
+    });
+  }
+
+  const taken = await prisma.user.findFirst({
+    where: {
+      nickname: {
+        equals: nickname,
+        mode: 'insensitive',
+      },
+      NOT: { id: userId },
+    },
+  });
+
+  if (taken) {
+    return res.status(409).json({
+      success: false,
+      errorCode: ErrorCodes.DUPLICATE_NICKNAME,
+      message: 'Nickname này đã được sử dụng. Vui lòng chọn nickname khác.',
+    });
+  }
+
+  const updated = await prisma.user.update({
+    where: { id: userId },
+    data: { nickname },
+  });
+
+  return res.status(200).json({
+    success: true,
+    message: 'Thiết lập nickname thành công',
+    data: {
+      id: updated.id,
+      nickname: updated.nickname,
+      fullName: updated.fullName,
+      updatedAt: updated.updatedAt,
+    },
+  });
+};
+
+// get /api/v1/users/me
+export const getMe = async (
+  req: AuthRequest,
+  res: Response,
+) => {
+  const userId = req.user!.id;
+
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    include: {
+      allergies: {
+        include: { ingredient: true },
+      },
+    },
+  });
+
+  if (!user) {
+    return res.status(404).json({
+      success: false,
+      errorCode: ErrorCodes.USER_NOT_FOUND,
+      message: 'Không tìm thấy thông tin người dùng trong cơ sở dữ liệu.',
+    });
+  }
+
+  const [recipesCount, followersCount, followingCount] = await Promise.all([
+    prisma.recipe.count({ where: { authorId: userId } }),
+    prisma.follow.count({ where: { followingId: userId } }),
+    prisma.follow.count({ where: { followerId: userId } }),
+  ]);
+
+  return res.status(200).json({
+    success: true,
+    message: 'Lấy thông tin hồ sơ thành công',
+    data: {
+      id: user.id,
+      email: user.email,
+      nickname: user.nickname,
+      fullName: user.fullName,
+      avatarUrl: user.avatarUrl,
+      bio: user.bio,
+      role: user.role,
+      stats: {
+        recipesCount,
+        followersCount,
+        followingCount,
+      },
+      allergies: (user.allergies || []).map((a) => ({
+        id: a.ingredient.id,
+        name: a.ingredient.name,
+        standardUnit: a.ingredient.standardUnit,
+      })),
+      createdAt: user.createdAt,
+    },
+  });
+};
+
+// put /api/v1/users/me & put /api/v1/users/profile
 export const updateProfile = async (
   req: AuthRequest,
   res: Response,
@@ -99,6 +240,7 @@ export const updateProfile = async (
   const {
     nickname,
     fullName,
+    avatarUrl,
     bio,
     allergyIngredientIds,
   } = parsed.data;
@@ -148,6 +290,7 @@ export const updateProfile = async (
       data: {
         ...(nickname !== undefined && { nickname }),
         ...(fullName !== undefined && { fullName }),
+        ...(avatarUrl !== undefined && { avatarUrl }),
         ...(bio !== undefined && { bio }),
       },
       include: {
@@ -168,11 +311,164 @@ export const updateProfile = async (
       fullName: updatedUser.fullName,
       avatarUrl: updatedUser.avatarUrl,
       bio: updatedUser.bio,
-      allergies: updatedUser.allergies.map((a) => ({
+      allergies: (updatedUser.allergies || []).map((a) => ({
         id: a.ingredient.id,
         name: a.ingredient.name,
         standardUnit: a.ingredient.standardUnit,
       })),
+      updatedAt: updatedUser.updatedAt,
+    },
+  });
+};
+
+// get /api/v1/users/:nickname - xem hồ sơ công khai của đầu bếp
+export const getUserByNickname = async (
+  req: AuthRequest,
+  res: Response,
+) => {
+  const nickname = String(req.params.nickname || '').trim();
+
+  const user = await prisma.user.findFirst({
+    where: {
+      nickname: {
+        equals: nickname,
+        mode: 'insensitive',
+      },
+    },
+    include: {
+      allergies: {
+        include: { ingredient: true },
+      },
+    },
+  });
+
+  if (!user) {
+    return res.status(404).json({
+      success: false,
+      errorCode: ErrorCodes.USER_NOT_FOUND,
+      message: 'Không tìm thấy thông tin người dùng trong cơ sở dữ liệu',
+    });
+  }
+
+  const [recipesCount, followersCount, followingCount, recentRecipes, isFollowing] =
+    await Promise.all([
+      prisma.recipe.count({ where: { authorId: user.id } }),
+      prisma.follow.count({ where: { followingId: user.id } }),
+      prisma.follow.count({ where: { followerId: user.id } }),
+      prisma.recipe.findMany({
+        where: { authorId: user.id },
+        take: 10,
+        orderBy: { createdAt: 'desc' },
+        include: {
+          category: true,
+        },
+      }),
+      req.user && req.user.id !== user.id
+        ? prisma.follow
+            .findUnique({
+              where: {
+                followerId_followingId: {
+                  followerId: req.user.id,
+                  followingId: user.id,
+                },
+              },
+            })
+            .then(Boolean)
+        : Promise.resolve(false),
+    ]);
+
+  return res.status(200).json({
+    success: true,
+    message: 'Lấy thông tin hồ sơ công khai thành công',
+    data: {
+      id: user.id,
+      nickname: user.nickname,
+      fullName: user.fullName,
+      avatarUrl: user.avatarUrl,
+      bio: user.bio,
+      stats: {
+        recipesCount,
+        followersCount,
+        followingCount,
+      },
+      isFollowing,
+      recentRecipes: recentRecipes.map((r) => ({
+        id: r.id,
+        title: r.title,
+        description: r.description,
+        thumbnailUrl: r.thumbnailUrl,
+        averageRating: Number(r.averageRating),
+        ratingCount: r.ratingCount,
+        cookingTime: r.cookingTime,
+        category: r.category ? { id: r.category.id, name: r.category.name } : null,
+      })),
+    },
+  });
+};
+
+// get /api/v1/users/me/allergies - lấy danh sách nguyên liệu dị ứng
+export const getMyAllergies = async (
+  req: AuthRequest,
+  res: Response,
+) => {
+  const userId = req.user!.id;
+  const allergies = await prisma.userAllergy.findMany({
+    where: { userId },
+    include: { ingredient: true },
+    orderBy: { ingredientId: 'asc' },
+  });
+
+  return res.status(200).json({
+    success: true,
+    message: 'Lấy danh sách dị ứng thành công',
+    data: allergies.map((a) => ({
+      id: a.ingredient.id,
+      name: a.ingredient.name,
+      standardUnit: a.ingredient.standardUnit,
+    })),
+  });
+};
+
+// put /api/v1/users/me/allergies - cập nhật toàn bộ danh sách dị ứng
+export const updateMyAllergies = async (
+  req: AuthRequest,
+  res: Response,
+) => {
+  const parsed = updateAllergiesSchema.safeParse(req.body);
+
+  if (!parsed.success) {
+    return res.status(400).json({
+      success: false,
+      errorCode: ErrorCodes.VALIDATION_ERROR,
+      message: parsed.error.errors[0].message,
+    });
+  }
+
+  const userId = req.user!.id;
+  const { ingredientIds } = parsed.data;
+
+  await prisma.$transaction(async (tx) => {
+    await tx.userAllergy.deleteMany({
+      where: { userId },
+    });
+
+    if (ingredientIds.length > 0) {
+      await tx.userAllergy.createMany({
+        data: ingredientIds.map((ingredientId) => ({
+          userId,
+          ingredientId,
+        })),
+        skipDuplicates: true,
+      });
+    }
+  });
+
+  return res.status(200).json({
+    success: true,
+    message: 'Cập nhật danh sách dị ứng thành công',
+    data: {
+      totalAllergies: ingredientIds.length,
+      ingredientIds,
     },
   });
 };
@@ -208,7 +504,6 @@ export const uploadAvatar = async (
 
   const userId = req.user!.id;
 
-  // Firebase Storage chưa được cấu hình.
   if (!firebaseBucket) {
     return res.status(503).json({
       success: false,

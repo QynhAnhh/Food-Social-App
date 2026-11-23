@@ -90,6 +90,7 @@ export const googleLogin = async (req: Request, res: Response) => {
           })),
         },
         isNewUser,
+        hasNickname: Boolean(user.nickname),
         requireNicknameSetup: !user.nickname,
       },
     });

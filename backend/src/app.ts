@@ -9,6 +9,12 @@ import { savedFiltersRouter } from './modules/search/saved-filters.routes';
 import { shoppingListRouter } from './modules/shopping-list/shopping-list.routes';
 import { notificationsRouter } from './modules/notifications/notifications.routes';
 import { socialRouter } from './modules/social/social.routes';
+import {
+  categoriesRouter,
+  dietaryRegimesRouter,
+  ingredientsRouter,
+} from './modules/master-data/master-data.routes';
+import { searchRouter } from './modules/search/search.routes';
 import { errorHandler } from './common/middlewares/error.middleware';
 
 export const app = express();
@@ -41,6 +47,10 @@ app.use(`${API_PREFIX}/saved-filters`, savedFiltersRouter);
 app.use(`${API_PREFIX}/shopping-list`, shoppingListRouter);
 app.use(`${API_PREFIX}/notifications`, notificationsRouter);
 app.use(`${API_PREFIX}/social`, socialRouter);
+app.use(`${API_PREFIX}/categories`, categoriesRouter);
+app.use(`${API_PREFIX}/dietary-regimes`, dietaryRegimesRouter);
+app.use(`${API_PREFIX}/ingredients`, ingredientsRouter);
+app.use(`${API_PREFIX}/search`, searchRouter);
 
 // ================= 404 HANDLER =================
 

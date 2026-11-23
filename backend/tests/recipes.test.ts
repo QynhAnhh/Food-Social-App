@@ -1,11 +1,11 @@
-﻿import request from 'supertest';
+import request from 'supertest';
 import { app } from '../src/app';
 import { prismaMock } from './setup';
 
 const AUTH_HEADER = { Authorization: 'Bearer valid-token' };
 
-describe('GET /api/v1/recipes/:id', () => {
-  it('1. Trả về đầy đủ thông tin công thức, nguyên liệu, bước nấu và tác giả', async () => {
+describe('Recipes APIs', () => {
+  it('1. GET /api/v1/recipes/:id - Trả về đầy đủ thông tin công thức, nguyên liệu, bước nấu và tác giả', async () => {
     prismaMock.recipe.findUnique.mockResolvedValueOnce({
       id: 'rec-101',
       title: 'Thịt bò xào bông cải xanh',
@@ -30,5 +30,31 @@ describe('GET /api/v1/recipes/:id', () => {
     expect(res.body.data.author.nickname).toBe('bep_cua_anh');
     expect(res.body.data.ingredients).toHaveLength(1);
     expect(res.body.data.steps).toHaveLength(1);
+  });
+
+  it('2. DELETE /api/v1/recipes/:id - Xóa công thức nếu là tác giả sở hữu', async () => {
+    prismaMock.recipe.findUnique.mockResolvedValueOnce({
+      id: 'rec-101',
+      authorId: 'user-uuid-1',
+    });
+
+    const res = await request(app).delete('/api/v1/recipes/rec-101').set(AUTH_HEADER);
+
+    expect(res.status).toBe(200);
+    expect(res.body.success).toBe(true);
+    expect(res.body.data.id).toBe('rec-101');
+  });
+
+  it('3. DELETE /api/v1/recipes/:id - Trả về 403 nếu không phải tác giả sở hữu', async () => {
+    prismaMock.recipe.findUnique.mockResolvedValueOnce({
+      id: 'rec-102',
+      authorId: 'other-user-uuid',
+    });
+
+    const res = await request(app).delete('/api/v1/recipes/rec-102').set(AUTH_HEADER);
+
+    expect(res.status).toBe(403);
+    expect(res.body.success).toBe(false);
+    expect(res.body.errorCode).toBe('NOT_RECIPE_OWNER');
   });
 });
