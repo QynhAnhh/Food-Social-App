@@ -2,7 +2,7 @@ import { Response } from 'express';
 import multer from 'multer';
 import { z } from 'zod';
 import { prisma } from '../../config/prisma';
-import { firebaseBucket } from '../../config/firebase';
+import { uploadImage, isStorageConfigured } from '../../common/services/storage.service';
 import { AuthRequest } from '../../common/middlewares/auth.middleware';
 import { ErrorCodes } from '../../common/errors';
 
@@ -504,27 +504,18 @@ export const uploadAvatar = async (
 
   const userId = req.user!.id;
 
-  if (!firebaseBucket) {
+  if (!isStorageConfigured()) {
     return res.status(503).json({
       success: false,
       message: 'Chức năng upload ảnh đại diện hiện chưa được cấu hình.',
     });
   }
 
-  const ext = req.file.mimetype.split('/')[1];
-
-  const filePath = `avatars/${userId}_${Date.now()}.${ext}`;
-
-  const fileUpload = firebaseBucket.file(filePath);
-
-  await fileUpload.save(req.file.buffer, {
-    metadata: {
-      contentType: req.file.mimetype,
-    },
-    public: true,
+  const publicId = `${userId}_${Date.now()}`;
+  const publicUrl = await uploadImage(req.file.buffer, {
+    folder: 'avatars',
+    publicId,
   });
-
-  const publicUrl = `https://storage.googleapis.com/${firebaseBucket.name}/${filePath}`;
 
   await prisma.user.update({
     where: { id: userId },

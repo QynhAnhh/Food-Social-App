@@ -171,6 +171,17 @@ export const firebaseBucketMock = {
   })),
 };
 
+export const uploadImageMock = jest
+  .fn()
+  .mockResolvedValue('https://res.cloudinary.com/food-social/image/upload/v12345/avatars/mock.jpg');
+export const isStorageConfiguredMock = jest.fn().mockReturnValue(true);
+
+jest.mock('../src/common/services/storage.service', () => ({
+  uploadImage: uploadImageMock,
+  isStorageConfigured: isStorageConfiguredMock,
+  deleteImage: jest.fn().mockResolvedValue(true),
+}));
+
 jest.mock('../src/config/prisma', () => ({
   prisma: prismaMock,
 }));

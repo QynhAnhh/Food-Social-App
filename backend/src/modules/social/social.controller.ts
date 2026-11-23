@@ -3,7 +3,7 @@ import multer from 'multer';
 import { z } from 'zod';
 import { Prisma } from '@prisma/client';
 import { prisma } from '../../config/prisma';
-import { firebaseBucket } from '../../config/firebase';
+import { uploadImage, isStorageConfigured } from '../../common/services/storage.service';
 import { AuthRequest } from '../../common/middlewares/auth.middleware';
 import { ErrorCodes } from '../../common/errors';
 import { notifyUser } from '../notifications/notifications.service';
@@ -714,13 +714,12 @@ export const createCooksnap = async (req: AuthRequest, res: Response) => {
   let imageUrl = req.body?.imageUrl ? String(req.body.imageUrl).trim() : '';
 
   if (req.file) {
-    if (!firebaseBucket) {
+    if (!isStorageConfigured()) {
       return res.status(503).json({
         success: false,
         message: 'Chức năng upload ảnh hiện chưa được cấu hình.',
       });
     }
-
 
     const allowedMimeTypes = ['image/jpeg', 'image/png', 'image/webp'];
     if (!allowedMimeTypes.includes(req.file.mimetype)) {
@@ -731,16 +730,11 @@ export const createCooksnap = async (req: AuthRequest, res: Response) => {
       });
     }
 
-    const ext = req.file.mimetype.split('/')[1];
-    const filePath = `cooksnaps/${recipeId}/${userId}_${Date.now()}.${ext}`;
-    const fileUpload = firebaseBucket.file(filePath);
-
-    await fileUpload.save(req.file.buffer, {
-      metadata: { contentType: req.file.mimetype },
-      public: true,
+    const publicId = `${userId}_${Date.now()}`;
+    imageUrl = await uploadImage(req.file.buffer, {
+      folder: `cooksnaps/${recipeId}`,
+      publicId,
     });
-
-    imageUrl = `https://storage.googleapis.com/${firebaseBucket.name}/${filePath}`;
   }
 
   if (!imageUrl) {
