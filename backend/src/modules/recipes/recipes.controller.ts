@@ -493,3 +493,48 @@ export const getMyFavoriteRecipes = async (req: AuthRequest, res: Response) => {
     data: result,
   });
 };
+
+// delete /api/v1/recipes/:id - xóa công thức (chỉ tác giả hoặc admin)
+export const deleteRecipe = async (req: AuthRequest, res: Response) => {
+  const recipeId = String(req.params.id);
+  const userId = req.user!.id;
+  const userRole = req.user!.role;
+
+  const recipe = await prisma.recipe.findUnique({
+    where: { id: recipeId },
+  });
+
+  if (!recipe) {
+    return res.status(404).json({
+      success: false,
+      errorCode: ErrorCodes.RECIPE_NOT_FOUND,
+      message: 'Không tìm thấy công thức cần xóa.',
+    });
+  }
+
+  if (recipe.authorId !== userId && userRole !== 'ADMIN') {
+    return res.status(403).json({
+      success: false,
+      errorCode: ErrorCodes.NOT_RECIPE_OWNER,
+      message: 'Bạn không có quyền xóa công thức này.',
+    });
+  }
+
+  await prisma.$transaction(async (tx) => {
+    await tx.recipeStep.deleteMany({ where: { recipeId } });
+    await tx.recipeIngredient.deleteMany({ where: { recipeId } });
+    await tx.recipeDietaryTag.deleteMany({ where: { recipeId } });
+    await tx.favoriteRecipe.deleteMany({ where: { recipeId } });
+    await tx.review.deleteMany({ where: { recipeId } });
+    await tx.cooksnap.deleteMany({ where: { recipeId } });
+    await tx.shoppingListRecipeSource.deleteMany({ where: { recipeId } });
+    await tx.recipe.delete({ where: { id: recipeId } });
+  });
+
+  return res.status(200).json({
+    success: true,
+    message: 'Đã xóa công thức thành công.',
+    data: { id: recipeId },
+  });
+};
+

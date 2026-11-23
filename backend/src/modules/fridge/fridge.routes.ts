@@ -17,6 +17,7 @@ export const fridgeRouter = Router();
 fridgeRouter.use(authenticate);
 
 // lấy danh sách nguyên liệu trong tủ lạnh
+fridgeRouter.get('/', asyncHandler(getFridgeItems));
 fridgeRouter.get('/items', asyncHandler(getFridgeItems));
 
 // thêm hoặc cập nhật nguyên liệu
@@ -30,3 +31,5 @@ fridgeRouter.delete('/items/:id', asyncHandler(deleteFridgeItem));
 
 // gợi ý công thức nấu ăn
 fridgeRouter.get('/recommendations', asyncHandler(getFridgeRecommendations));
+fridgeRouter.get('/suggestions', asyncHandler(getFridgeRecommendations));
+fridgeRouter.post('/suggestions', asyncHandler(getFridgeRecommendations));

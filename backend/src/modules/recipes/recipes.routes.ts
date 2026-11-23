@@ -10,6 +10,7 @@ import {
   getRecipeById,
   createRecipe,
   updateRecipe,
+  deleteRecipe,
   toggleFavorite,
   getFavoriteStatus,
   getMyFavoriteRecipes,
@@ -69,3 +70,11 @@ recipesRouter.put(
   authenticate,
   asyncHandler(updateRecipe),
 );
+
+// xóa công thức (chỉ tác giả hoặc admin)
+recipesRouter.delete(
+  '/:id',
+  authenticate,
+  asyncHandler(deleteRecipe),
+);
+

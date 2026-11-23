@@ -2,8 +2,10 @@ export const prismaMock = {
   user: {
     findUnique: jest.fn(),
     findFirst: jest.fn(),
+    findMany: jest.fn(),
     upsert: jest.fn(),
     update: jest.fn(),
+    count: jest.fn(),
   },
   userAllergy: {
     deleteMany: jest.fn(),
@@ -22,6 +24,8 @@ export const prismaMock = {
     findUnique: jest.fn(),
     create: jest.fn(),
     update: jest.fn(),
+    delete: jest.fn(),
+    deleteMany: jest.fn(),
     count: jest.fn(),
   },
   recipeStep: {
@@ -37,6 +41,7 @@ export const prismaMock = {
     deleteMany: jest.fn(),
   },
   category: {
+    findMany: jest.fn(),
     findUnique: jest.fn(),
     findFirst: jest.fn(),
   },
