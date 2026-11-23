@@ -163,6 +163,16 @@ export const firebaseMessagingMock = {
   sendEachForMulticast: jest.fn().mockResolvedValue({ responses: [] }),
 };
 
+export const firebaseDatabaseMock = {
+  ref: jest.fn(() => ({
+    set: jest.fn().mockResolvedValue(undefined),
+    update: jest.fn().mockResolvedValue(undefined),
+    push: jest.fn(() => ({
+      set: jest.fn().mockResolvedValue(undefined),
+    })),
+  })),
+};
+
 export const fileSaveMock = jest.fn().mockResolvedValue(undefined);
 export const firebaseBucketMock = {
   name: 'food-social-app.appspot.com',
@@ -190,6 +200,7 @@ jest.mock('../src/config/firebase', () => ({
   firebaseAuth: firebaseAuthMock,
   firebaseBucket: firebaseBucketMock,
   firebaseMessaging: firebaseMessagingMock,
+  firebaseDatabase: firebaseDatabaseMock,
 }));
 
 beforeEach(() => {
