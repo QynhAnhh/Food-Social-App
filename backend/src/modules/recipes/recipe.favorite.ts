@@ -1,6 +1,7 @@
 import { PrismaClient } from '@prisma/client';
 import { prisma as defaultPrisma } from '../../config/prisma';
 import { AppError, ErrorCodes } from '../../common/errors';
+import { syncRecipeFavoritesCount } from '../../common/services/realtime.service';
 
 export interface ToggleFavoriteResult {
   recipeId: string;
@@ -106,6 +107,8 @@ export async function toggleFavoriteRecipe(
       where: { recipeId },
     });
 
+    void syncRecipeFavoritesCount(recipeId, favoritesCount);
+
     return {
       recipeId,
       isFavorited: false,
@@ -124,6 +127,8 @@ export async function toggleFavoriteRecipe(
     const favoritesCount = await prismaClient.favoriteRecipe.count({
       where: { recipeId },
     });
+
+    void syncRecipeFavoritesCount(recipeId, favoritesCount);
 
     return {
       recipeId,

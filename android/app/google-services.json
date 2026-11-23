@@ -1,0 +1,64 @@
+{
+  "project_info": {
+    "project_number": "792703687811",
+    "firebase_url": "https://food-social-app-e4c50-default-rtdb.asia-southeast1.firebasedatabase.app",
+    "project_id": "food-social-app-e4c50",
+    "storage_bucket": "food-social-app-e4c50.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:792703687811:android:3c77a5791eda84eec08fb6",
+        "android_client_info": {
+          "package_name": "com.foodsocial.app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "792703687811-67g6ce0094l3h6jbo6ta4fdipoqk2d7i.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.foodsocial.app",
+            "certificate_hash": "d2d59b4979d37b2bd1b2883b007ed6a0413a679b"
+          }
+        },
+        {
+          "client_id": "792703687811-l9tqo697bie8rbn5d6fjiuvupvec9g4m.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.foodsocial.app",
+            "certificate_hash": "c46f6209aeac17250e03ccb08f8dbc5919770eb9"
+          }
+        },
+        {
+          "client_id": "792703687811-t85jk5o75b7sn31n7vfv8dg314pkmkn7.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.foodsocial.app",
+            "certificate_hash": "a23b05fec7b958750308d8bc9f9ebda730f4f83f"
+          }
+        },
+        {
+          "client_id": "792703687811-c1ftjup2bdt32p6tsdvrcgouv3nugpq5.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCBvtvUEGmaFvU8YBU_04t-yb_rzajPG8I"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "792703687811-c1ftjup2bdt32p6tsdvrcgouv3nugpq5.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

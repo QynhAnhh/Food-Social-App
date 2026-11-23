@@ -1,4 +1,3 @@
-
 import admin from 'firebase-admin';
 
 if (!admin.apps.length) {
@@ -11,6 +10,9 @@ if (!admin.apps.length) {
     ...(process.env.FIREBASE_STORAGE_BUCKET
       ? { storageBucket: process.env.FIREBASE_STORAGE_BUCKET }
       : {}),
+    ...(process.env.FIREBASE_DATABASE_URL
+      ? { databaseURL: process.env.FIREBASE_DATABASE_URL }
+      : {}),
   });
 }
 
@@ -22,3 +24,8 @@ export const firebaseBucket = process.env.FIREBASE_STORAGE_BUCKET
   : null;
 
 export const firebaseMessaging = admin.messaging();
+
+// Khởi tạo Firebase Realtime Database khi đã có cấu hình databaseURL.
+export const firebaseDatabase = process.env.FIREBASE_DATABASE_URL
+  ? admin.database()
+  : null;

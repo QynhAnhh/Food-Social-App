@@ -1,6 +1,7 @@
 import { NotificationType, Prisma } from '@prisma/client';
 import { prisma } from '../../config/prisma';
 import { firebaseMessaging } from '../../config/firebase';
+import { syncUserLiveNotification } from '../../common/services/realtime.service';
 
 export interface NotifyUserPayload {
   recipientId: string;
@@ -33,6 +34,9 @@ export const notifyUser = async (payload: NotifyUserPayload): Promise<void> => {
         data: (payload.data ?? {}) as Prisma.InputJsonValue,
       },
     });
+
+    // Đồng bộ tín hiệu thông báo thời gian thực qua Firebase Realtime Database
+    void syncUserLiveNotification(payload.recipientId, notification);
 
     // lấy danh sách FCM token của người nhận
     const deviceTokens = await prisma.userDevice.findMany({
