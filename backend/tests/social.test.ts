@@ -1,6 +1,6 @@
 import request from 'supertest';
 import { app } from '../src/app';
-import { prismaMock, firebaseAuthMock } from './setup';
+import { prismaMock, firebaseAuthMock, uploadImageMock } from './setup';
 import { ErrorCodes } from '../src/common/errors';
 
 describe('Social, News Feed, Reviews Trigger & Notifications (Week 4: FSA-31, FSA-32)', () => {
@@ -436,6 +436,39 @@ describe('Social, News Feed, Reviews Trigger & Notifications (Week 4: FSA-31, FS
       expect(res.status).toBe(201);
       expect(res.body.success).toBe(true);
       expect(res.body.data.imageUrl).toBe('https://example.com/my-pho.jpg');
+    });
+
+    it('15b. POST /api/v1/social/recipes/:recipeId/cooksnaps - Đăng cooksnap bằng file upload (Cloudinary)', async () => {
+      (prismaMock.recipe.findUnique as jest.Mock).mockResolvedValue({
+        id: recipeId,
+        title: 'Phở bò tái lăn',
+        authorId: chefId,
+      });
+
+      (prismaMock.cooksnap.create as jest.Mock).mockResolvedValue({
+        id: cooksnapId,
+        recipeId,
+        userId: currentUserId,
+        imageUrl: 'https://res.cloudinary.com/food-social/image/upload/v12345/cooksnaps/mock.jpg',
+        caption: 'Thành phẩm đính kèm ảnh file!',
+        user: {
+          id: currentUserId,
+          nickname: 'chef_nhat',
+          fullName: 'Minh Nhất',
+          avatarUrl: null,
+        },
+      });
+
+      const fakeImageBuffer = Buffer.from('fake-cooksnap-image');
+      const res = await request(app)
+        .post(`/api/v1/social/recipes/${recipeId}/cooksnaps`)
+        .set('Authorization', token)
+        .field('caption', 'Thành phẩm đính kèm ảnh file!')
+        .attach('image', fakeImageBuffer, { filename: 'cooksnap.jpg', contentType: 'image/jpeg' });
+
+      expect(res.status).toBe(201);
+      expect(res.body.success).toBe(true);
+      expect(uploadImageMock).toHaveBeenCalled();
     });
   });
 

@@ -1,6 +1,6 @@
 import request from 'supertest';
 import { app } from '../src/app';
-import { prismaMock, fileSaveMock } from './setup';
+import { prismaMock, uploadImageMock } from './setup';
 
 const AUTH_HEADER = { Authorization: 'Bearer valid-token' };
 
@@ -128,7 +128,7 @@ describe('Users & Profile APIs', () => {
     expect(putRes.body.data.totalAllergies).toBe(2);
   });
 
-  it('7. POST /avatar - Upload ảnh lên Firebase Cloud Storage', async () => {
+  it('7. POST /avatar - Upload ảnh đại diện lên Cloudinary', async () => {
     prismaMock.user.update.mockResolvedValueOnce({ id: 'user-uuid-1' });
     const fakeImageBuffer = Buffer.from('fake-image');
     const res = await request(app)
@@ -137,6 +137,8 @@ describe('Users & Profile APIs', () => {
       .attach('avatar', fakeImageBuffer, { filename: 'avatar.png', contentType: 'image/png' });
 
     expect(res.status).toBe(200);
-    expect(fileSaveMock).toHaveBeenCalledTimes(1);
+    expect(res.body.success).toBe(true);
+    expect(uploadImageMock).toHaveBeenCalledTimes(1);
+    expect(res.body.data.avatarUrl).toContain('https://res.cloudinary.com/');
   });
 });
